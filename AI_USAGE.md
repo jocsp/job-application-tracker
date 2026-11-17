@@ -23,6 +23,7 @@
 - Asked to fix `seed.sql` so it matches the database schema and provide a commit message.
 - Asked to create the initial `app.py`, test the database connection with the provided environment variables, and suggest a commit message.
 - Asked to implement company CRUD operations in the Flask project and provide commit messages.
+- Asked to implement CRUD operations for jobs and provide a commit message.
 - Asked whether a proposed alternate schema is the same as or has a similar outcome to `schema.sql`.
 - Asked to add the fields from the alternate schema to `schema.sql`.
 - Asked whether the updated `schema.sql` now exactly matches the provided alternate schema.
@@ -714,6 +715,75 @@
 
 **What Worked Well:**
 - The schema and seed contact inserts now use the same field names.
+
+**Lessons Learned:**
+- Pending student reflection.
+
+### 2026-11-17 — Review company CRUD against the updated schema
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Determine whether company CRUD routes and forms need changes after the schema update.
+
+**Key Prompt(s):**
+- "see if the crud operations for the companies need updating based on the new schema"
+
+**AI Contribution:**
+- Compared the company form fields and CRUD SQL with the updated `companies` definition.
+- Read the live `companies` table metadata using `SHOW COLUMNS` and confirmed it has the same columns, including `created_at` with a current-timestamp default.
+- Determined that inserts may omit `created_at` because MySQL supplies the default; reads and updates remain compatible.
+
+**Changes and Modifications:**
+- No application files were changed. This usage log was updated.
+
+**Files Affected:**
+- `app.py`, `templates/companies.html`, `templates/company_detail.html`, `schema.sql`, and `AI_USAGE.md` (reviewed; log updated).
+- Live MySQL `companies` table metadata (read only).
+
+**Testing and Verification:**
+- Ran a read-only `SHOW COLUMNS FROM companies` query through the configured database connection.
+- No CRUD writes or application tests were run.
+
+**What Worked Well:**
+- The actual table metadata confirms the current company CRUD field names and defaults remain compatible.
+
+**Lessons Learned:**
+- Pending student reflection.
+
+### 2026-11-17 — Implement job CRUD pages and routes
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Add create, read, update, and delete functionality for jobs using the current MySQL schema.
+
+**Key Prompt(s):**
+- "let continue with the crud operations for jobs and give me the commit message"
+
+**AI Contribution:**
+- Read the live `jobs` and `companies` column metadata and confirmed the job table matches the updated schema.
+- Added routes to list, view, create, edit, and delete jobs, including company relationship validation, decimal salary and date validation, and deletion feedback when applications reference a job.
+- Added the jobs form/list page, job detail page, navigation link, and styling.
+- Suggested commit message `feat: add CRUD operations for jobs`.
+
+**Changes and Modifications:**
+- AI modified `app.py`, `templates/base.html`, and `static/style.css`; created `templates/jobs.html` and `templates/job_detail.html`; updated this log. No student modifications are confirmed.
+
+**Files Affected:**
+- `app.py` (modified).
+- `templates/base.html` (modified).
+- `templates/jobs.html` (created).
+- `templates/job_detail.html` (created).
+- `static/style.css` (modified).
+- `AI_USAGE.md` (reviewed and updated).
+- Live MySQL `jobs` and `companies` table metadata (read only).
+
+**Testing and Verification:**
+- Ran read-only `SHOW COLUMNS` queries for `jobs` and `companies`.
+- Ran `git diff --check`; no whitespace errors were reported.
+- Did not run CRUD operations or change job records.
+
+**What Worked Well:**
+- The SQL field names and types correspond to the live `jobs` table, and the company dropdown is based on live company records.
 
 **Lessons Learned:**
 - Pending student reflection.

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job.job_title }} | Job Application Tracker{% endblock %}
+
+{% block content %}
+<p class="eyebrow">Job details</p>
+<section class="panel detail-panel">
+    <div class="detail-heading">
+        <div>
+            <h1>{{ job.job_title }}</h1>
+            <p>{{ job.company_name }} · {{ job.job_type or "Type not specified" }}</p>
+        </div>
+        <div class="form-actions">
+            <a class="button button-secondary" href="{{ url_for('jobs_list') }}">Back to jobs</a>
+            <a class="button button-primary" href="{{ url_for('jobs_edit', job_id=job.job_id) }}">Edit job</a>
+        </div>
+    </div>
+
+    <dl class="detail-grid">
+        <div>
+            <dt>Salary range</dt>
+            <dd>
+                {% if job.salary_min is not none %}${{ "%.2f"|format(job.salary_min) }}{% else %}—{% endif %}
+                to
+                {% if job.salary_max is not none %}${{ "%.2f"|format(job.salary_max) }}{% else %}—{% endif %}
+            </dd>
+        </div>
+        <div><dt>Date posted</dt><dd>{{ job.date_posted or "—" }}</dd></div>
+        <div><dt>Status</dt><dd>{{ "Active" if job.is_active else "Inactive" }}</dd></div>
+        <div>
+            <dt>Posting</dt>
+            <dd>
+                {% if job.posting_url %}
+                    <a href="{{ job.posting_url if job.posting_url.startswith('http://') or job.posting_url.startswith('https://') else 'https://' ~ job.posting_url }}" target="_blank" rel="noopener noreferrer">Open job posting</a>
+                {% else %}—{% endif %}
+            </dd>
+        </div>
+        <div class="detail-notes"><dt>Description</dt><dd>{{ job.job_description or "—" }}</dd></div>
+    </dl>
+</section>
+{% endblock %}

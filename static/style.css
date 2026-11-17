@@ -22,6 +22,7 @@ a { color: #3157b7; }
 }
 
 .brand { color: #172033; font-size: 17px; font-weight: 700; text-decoration: none; }
+.site-header nav { display: flex; gap: 18px; }
 .site-header nav a { color: #49566f; font-weight: 600; text-decoration: none; }
 .site-header nav a:hover, a:hover { color: #203f8d; }
 .page { max-width: 1440px; margin: 0 auto; padding: 36px 24px 56px; }
@@ -30,13 +31,17 @@ a { color: #3157b7; }
 .page-heading p:not(.eyebrow), .panel-heading p { margin: 0; color: #68748a; }
 .eyebrow { margin: 0; color: #3157b7; font-size: 12px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
 
-.companies-layout { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.companies-layout, .jobs-layout { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 20px; align-items: start; }
 .panel { min-width: 0; padding: 22px; background: #fff; border: 1px solid #e2e7f0; border-radius: 12px; box-shadow: 0 5px 18px rgb(20 35 70 / 4%); }
 .panel h2 { margin: 0 0 18px; font-size: 19px; }
 .form-panel label { display: block; margin: 14px 0 6px; color: #39455b; font-size: 13px; font-weight: 650; }
 .form-panel label span { color: #b42318; }
 .form-panel input, .form-panel textarea { width: 100%; padding: 10px 11px; color: #172033; font: inherit; border: 1px solid #cfd6e3; border-radius: 7px; background: #fff; }
 .form-panel input:focus, .form-panel textarea:focus { outline: 3px solid rgb(49 87 183 / 15%); border-color: #3157b7; }
+.form-panel select { width: 100%; padding: 10px 11px; color: #172033; font: inherit; border: 1px solid #cfd6e3; border-radius: 7px; background: #fff; }
+.form-panel select:focus { outline: 3px solid rgb(49 87 183 / 15%); border-color: #3157b7; }
+.checkbox-label { display: flex !important; gap: 8px; align-items: center; }
+.checkbox-label input { width: auto; }
 .form-panel textarea { resize: vertical; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .form-actions, .row-actions { display: flex; gap: 8px; align-items: center; }
@@ -57,6 +62,9 @@ th, td { padding: 12px 10px; text-align: left; vertical-align: top; border-botto
 th { color: #65718a; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; white-space: nowrap; }
 td { color: #3e4a60; }
 .company-name { color: #172033; font-weight: 650; }
+.status-pill { display: inline-block; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.status-active { color: #17643a; background: #e9f7ef; }
+.status-inactive { color: #5c6472; background: #edf0f5; }
 .notes-cell { min-width: 140px; max-width: 240px; }
 .empty-state { padding: 24px 0; color: #68748a; }
 .detail-panel { margin-top: 18px; }
@@ -77,7 +85,7 @@ td { color: #3e4a60; }
 .form-errors p:last-child { margin-bottom: 0; }
 
 @media (max-width: 900px) {
-    .companies-layout { grid-template-columns: 1fr; }
+    .companies-layout, .jobs-layout { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 520px) {

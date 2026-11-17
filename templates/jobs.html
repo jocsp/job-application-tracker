@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Jobs | Job Application Tracker{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Job records</p>
+        <h1>Jobs</h1>
+        <p>Track openings and the companies that posted them.</p>
+    </div>
+</section>
+
+<div class="jobs-layout">
+    <section class="panel form-panel">
+        <h2>{{ "Edit job" if edit_job else "Add a job" }}</h2>
+
+        {% if form_errors %}
+            <div class="form-errors" role="alert">
+                {% for error in form_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+
+        {% if companies %}
+            <form method="post"
+                  action="{{ url_for('jobs_edit', job_id=edit_job.job_id) if edit_job else url_for('jobs_create') }}">
+                <label for="company_id">Company <span aria-hidden="true">*</span></label>
+                <select id="company_id" name="company_id" required>
+                    <option value="">Choose a company</option>
+                    {% for company in companies %}
+                        <option value="{{ company.company_id }}"
+                            {% if form_values.get('company_id')|string == company.company_id|string %}selected{% endif %}>
+                            {{ company.company_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <label for="job_title">Job title <span aria-hidden="true">*</span></label>
+                <input id="job_title" name="job_title" maxlength="100" required
+                       value="{{ form_values.get('job_title', '') }}">
+
+                <label for="job_description">Description</label>
+                <textarea id="job_description" name="job_description" rows="4">{{ form_values.get('job_description') or '' }}</textarea>
+
+                <div class="field-row">
+                    <div>
+                        <label for="salary_min">Minimum salary</label>
+                        <input id="salary_min" name="salary_min" type="number" min="0" step="0.01"
+                               value="{{ form_values.get('salary_min') if form_values.get('salary_min') is not none else '' }}">
+                    </div>
+                    <div>
+                        <label for="salary_max">Maximum salary</label>
+                        <input id="salary_max" name="salary_max" type="number" min="0" step="0.01"
+                               value="{{ form_values.get('salary_max') if form_values.get('salary_max') is not none else '' }}">
+                    </div>
+                </div>
+
+                <div class="field-row">
+                    <div>
+                        <label for="job_type">Job type</label>
+                        <input id="job_type" name="job_type" maxlength="20"
+                               placeholder="Full-time, Contract, etc."
+                               value="{{ form_values.get('job_type') or '' }}">
+                    </div>
+                    <div>
+                        <label for="date_posted">Date posted</label>
+                        <input id="date_posted" name="date_posted" type="date"
+                               value="{{ form_values.get('date_posted') or '' }}">
+                    </div>
+                </div>
+
+                <label for="posting_url">Posting URL</label>
+                <input id="posting_url" name="posting_url" maxlength="500" type="text"
+                       placeholder="https://example.com/job"
+                       value="{{ form_values.get('posting_url') or '' }}">
+
+                <label class="checkbox-label" for="is_active">
+                    <input id="is_active" name="is_active" type="checkbox"
+                           {% if form_values.get('is_active', true) %}checked{% endif %}>
+                    This job is currently active
+                </label>
+
+                <div class="form-actions">
+                    <button class="button button-primary" type="submit">
+                        {{ "Save changes" if edit_job else "Add job" }}
+                    </button>
+                    {% if edit_job %}
+                        <a class="button button-secondary" href="{{ url_for('jobs_list') }}">Cancel</a>
+                    {% endif %}
+                </div>
+            </form>
+        {% else %}
+            <p class="empty-state">Add a company before creating a job.</p>
+            <a class="button button-primary" href="{{ url_for('companies_list') }}">Go to companies</a>
+        {% endif %}
+    </section>
+
+    <section class="panel records-panel">
+        <div class="panel-heading">
+            <div>
+                <h2>Saved jobs</h2>
+                <p>{{ jobs|length }} record{{ "s" if jobs|length != 1 else "" }}</p>
+            </div>
+        </div>
+
+        {% if jobs %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Job</th>
+                            <th scope="col">Company</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Salary range</th>
+                            <th scope="col">Date posted</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in jobs %}
+                            <tr>
+                                <td class="company-name">{{ job.job_title }}</td>
+                                <td>{{ job.company_name }}</td>
+                                <td>{{ job.job_type or "—" }}</td>
+                                <td>
+                                    {% if job.salary_min is not none or job.salary_max is not none %}
+                                        {% if job.salary_min is not none %}${{ "%.2f"|format(job.salary_min) }}{% else %}—{% endif %}
+                                        –
+                                        {% if job.salary_max is not none %}${{ "%.2f"|format(job.salary_max) }}{% else %}—{% endif %}
+                                    {% else %}—{% endif %}
+                                </td>
+                                <td>{{ job.date_posted or "—" }}</td>
+                                <td><span class="status-pill {{ 'status-active' if job.is_active else 'status-inactive' }}">{{ "Active" if job.is_active else "Inactive" }}</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <a class="button button-small button-secondary" href="{{ url_for('jobs_detail', job_id=job.job_id) }}">View</a>
+                                        <a class="button button-small button-secondary" href="{{ url_for('jobs_edit', job_id=job.job_id) }}">Edit</a>
+                                        <form method="post" action="{{ url_for('jobs_delete', job_id=job.job_id) }}"
+                                              onsubmit="return confirm('Delete {{ job.job_title }}?');">
+                                            <button class="button button-small button-danger" type="submit">Delete</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="empty-state">No jobs yet. Add one using the form.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

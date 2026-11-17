@@ -1,6 +1,8 @@
 """Initial Flask application for the Job Application Tracker."""
 
 import os
+from datetime import date
+from decimal import Decimal, InvalidOperation
 
 from flask import Flask, abort, flash, jsonify, redirect, render_template, request, url_for
 from mysql.connector.errors import IntegrityError
@@ -160,6 +162,186 @@ def companies_delete(company_id):
             flash("Company not found.", "error")
 
     return redirect(url_for("companies_list"))
+
+
+def _job_form_data():
+    """Read and validate fields submitted by the job form."""
+    company_id_value = request.form.get("company_id", "").strip()
+    job_type = request.form.get("job_type", "").strip() or None
+    posting_url = request.form.get("posting_url", "").strip() or None
+    date_posted_value = request.form.get("date_posted", "").strip()
+
+    data = {
+        "company_id": None,
+        "job_title": request.form.get("job_title", "").strip(),
+        "job_description": request.form.get("job_description", "").strip() or None,
+        "salary_min": None,
+        "salary_max": None,
+        "job_type": job_type,
+        "posting_url": posting_url,
+        "date_posted": None,
+        "is_active": request.form.get("is_active") == "on",
+    }
+    errors = []
+
+    if not company_id_value.isdigit():
+        errors.append("Select a company.")
+    else:
+        data["company_id"] = int(company_id_value)
+        if fetch_one(
+            "SELECT company_id FROM companies WHERE company_id = %s",
+            (data["company_id"],),
+        ) is None:
+            errors.append("The selected company does not exist.")
+
+    if not data["job_title"]:
+        errors.append("Job title is required.")
+    elif len(data["job_title"]) > 100:
+        errors.append("Job title must be 100 characters or fewer.")
+
+    if job_type and len(job_type) > 20:
+        errors.append("Job type must be 20 characters or fewer.")
+    if posting_url and len(posting_url) > 500:
+        errors.append("Posting URL must be 500 characters or fewer.")
+
+    max_salary = Decimal("99999999.99")
+    for field, label in (("salary_min", "Minimum salary"), ("salary_max", "Maximum salary")):
+        raw_value = request.form.get(field, "").strip()
+        if not raw_value:
+            continue
+        try:
+            value = Decimal(raw_value)
+        except InvalidOperation:
+            errors.append(f"{label} must be a valid number.")
+            continue
+        if not value.is_finite() or value < 0 or value > max_salary:
+            errors.append(f"{label} must be between 0 and 99,999,999.99.")
+            continue
+        data[field] = value.quantize(Decimal("0.01"))
+
+    if (
+        data["salary_min"] is not None
+        and data["salary_max"] is not None
+        and data["salary_min"] > data["salary_max"]
+    ):
+        errors.append("Minimum salary cannot be greater than maximum salary.")
+
+    if date_posted_value:
+        try:
+            data["date_posted"] = date.fromisoformat(date_posted_value)
+        except ValueError:
+            errors.append("Date posted must be a valid date.")
+
+    return data, errors
+
+
+def _render_jobs(edit_job=None, form_values=None, form_errors=None, status=200):
+    companies = fetch_all("SELECT company_id, company_name FROM companies ORDER BY company_name")
+    jobs = fetch_all(
+        """SELECT j.*, c.company_name
+           FROM jobs AS j
+           JOIN companies AS c ON c.company_id = j.company_id
+           ORDER BY j.created_at DESC, j.job_id DESC"""
+    )
+    if form_values is None:
+        form_values = edit_job or {"is_active": True}
+    return render_template(
+        "jobs.html",
+        jobs=jobs,
+        companies=companies,
+        edit_job=edit_job,
+        form_values=form_values,
+        form_errors=form_errors or [],
+    ), status
+
+
+@app.get("/jobs")
+def jobs_list():
+    """Show all jobs and the form for adding a job."""
+    return _render_jobs()
+
+
+@app.post("/jobs")
+def jobs_create():
+    """Create a job from the submitted form."""
+    data, errors = _job_form_data()
+    if errors:
+        return _render_jobs(form_values=data, form_errors=errors, status=400)
+
+    insert_query(
+        """INSERT INTO jobs
+           (company_id, job_title, job_description, salary_min, salary_max,
+            job_type, posting_url, date_posted, is_active)
+           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+        (data["company_id"], data["job_title"], data["job_description"],
+         data["salary_min"], data["salary_max"], data["job_type"],
+         data["posting_url"], data["date_posted"], data["is_active"]),
+    )
+    flash("Job added.", "success")
+    return redirect(url_for("jobs_list"))
+
+
+@app.get("/jobs/<int:job_id>")
+def jobs_detail(job_id):
+    """Show the details for one job."""
+    job = fetch_one(
+        """SELECT j.*, c.company_name
+           FROM jobs AS j
+           JOIN companies AS c ON c.company_id = j.company_id
+           WHERE j.job_id = %s""",
+        (job_id,),
+    )
+    if job is None:
+        abort(404)
+    return render_template("job_detail.html", job=job)
+
+
+@app.route("/jobs/<int:job_id>/edit", methods=["GET", "POST"])
+def jobs_edit(job_id):
+    """Display and process the edit form for a job."""
+    job = fetch_one("SELECT * FROM jobs WHERE job_id = %s", (job_id,))
+    if job is None:
+        abort(404)
+
+    if request.method == "GET":
+        return _render_jobs(edit_job=job)
+
+    data, errors = _job_form_data()
+    if errors:
+        return _render_jobs(
+            edit_job=job, form_values=data, form_errors=errors, status=400
+        )
+
+    execute_query(
+        """UPDATE jobs
+           SET company_id = %s, job_title = %s, job_description = %s,
+               salary_min = %s, salary_max = %s, job_type = %s,
+               posting_url = %s, date_posted = %s, is_active = %s
+           WHERE job_id = %s""",
+        (data["company_id"], data["job_title"], data["job_description"],
+         data["salary_min"], data["salary_max"], data["job_type"],
+         data["posting_url"], data["date_posted"], data["is_active"], job_id),
+    )
+    flash("Job updated.", "success")
+    return redirect(url_for("jobs_list"))
+
+
+@app.post("/jobs/<int:job_id>/delete")
+def jobs_delete(job_id):
+    """Delete a job if no applications refer to it."""
+    try:
+        deleted_rows = execute_query(
+            "DELETE FROM jobs WHERE job_id = %s", (job_id,)
+        )
+    except IntegrityError:
+        flash("This job cannot be deleted while it has applications.", "error")
+    else:
+        if deleted_rows:
+            flash("Job deleted.", "success")
+        else:
+            flash("Job not found.", "error")
+
+    return redirect(url_for("jobs_list"))
 
 
 if __name__ == "__main__":
