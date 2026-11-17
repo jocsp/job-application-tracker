@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}{{ contact.first_name }} {{ contact.last_name }} | Job Application Tracker{% endblock %}
+
+{% block content %}
+<p class="eyebrow">Contact details</p>
+<section class="panel detail-panel">
+    <div class="detail-heading">
+        <div>
+            <h1>{{ contact.first_name }} {{ contact.last_name }}</h1>
+            <p>{{ contact.job_title or "Title not specified" }} at {{ contact.company_name }}</p>
+        </div>
+        <div class="form-actions">
+            <a class="button button-secondary" href="{{ url_for('contacts_list') }}">Back to contacts</a>
+            <a class="button button-primary" href="{{ url_for('contacts_edit', contact_id=contact.contact_id) }}">Edit contact</a>
+        </div>
+    </div>
+
+    <dl class="detail-grid">
+        <div>
+            <dt>Email</dt>
+            <dd>{% if contact.email %}<a href="mailto:{{ contact.email }}">{{ contact.email }}</a>{% else %}—{% endif %}</dd>
+        </div>
+        <div>
+            <dt>Phone</dt>
+            <dd>{% if contact.phone %}<a href="tel:{{ contact.phone }}">{{ contact.phone }}</a>{% else %}—{% endif %}</dd>
+        </div>
+        <div>
+            <dt>LinkedIn</dt>
+            <dd>
+                {% if contact.linkedin_url %}
+                    <a href="{{ contact.linkedin_url if contact.linkedin_url.startswith('http://') or contact.linkedin_url.startswith('https://') else 'https://' ~ contact.linkedin_url }}" target="_blank" rel="noopener noreferrer">{{ contact.linkedin_url }}</a>
+                {% else %}—{% endif %}
+            </dd>
+        </div>
+        <div class="detail-notes"><dt>Notes</dt><dd>{{ contact.notes or "—" }}</dd></div>
+    </dl>
+</section>
+{% endblock %}

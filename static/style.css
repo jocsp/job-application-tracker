@@ -31,7 +31,7 @@ a { color: #3157b7; }
 .page-heading p:not(.eyebrow), .panel-heading p { margin: 0; color: #68748a; }
 .eyebrow { margin: 0; color: #3157b7; font-size: 12px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
 
-.companies-layout, .jobs-layout { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.companies-layout, .jobs-layout, .contacts-layout { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 20px; align-items: start; }
 .panel { min-width: 0; padding: 22px; background: #fff; border: 1px solid #e2e7f0; border-radius: 12px; box-shadow: 0 5px 18px rgb(20 35 70 / 4%); }
 .panel h2 { margin: 0 0 18px; font-size: 19px; }
 .form-panel label { display: block; margin: 14px 0 6px; color: #39455b; font-size: 13px; font-weight: 650; }
@@ -85,7 +85,7 @@ td { color: #3e4a60; }
 .form-errors p:last-child { margin-bottom: 0; }
 
 @media (max-width: 900px) {
-    .companies-layout, .jobs-layout { grid-template-columns: 1fr; }
+    .companies-layout, .jobs-layout, .contacts-layout { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 520px) {

@@ -24,6 +24,7 @@
 - Asked to create the initial `app.py`, test the database connection with the provided environment variables, and suggest a commit message.
 - Asked to implement company CRUD operations in the Flask project and provide commit messages.
 - Asked to implement CRUD operations for jobs and provide a commit message.
+- Asked to add CRUD operations for contacts.
 - Asked whether a proposed alternate schema is the same as or has a similar outcome to `schema.sql`.
 - Asked to add the fields from the alternate schema to `schema.sql`.
 - Asked whether the updated `schema.sql` now exactly matches the provided alternate schema.
@@ -784,6 +785,44 @@
 
 **What Worked Well:**
 - The SQL field names and types correspond to the live `jobs` table, and the company dropdown is based on live company records.
+
+**Lessons Learned:**
+- Pending student reflection.
+
+### 2026-11-17 — Implement contact CRUD pages and routes
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Add create, read, update, and delete functionality for contact records.
+
+**Key Prompt(s):**
+- "let's add crud operations for contacts"
+
+**AI Contribution:**
+- Inspected live `contacts` and `companies` table columns using read-only metadata queries.
+- Added contact list, detail, create, edit, and delete routes with company relationship validation and field length validation.
+- Added a contact form/list page, contact detail page, navigation link, and responsive layout styling.
+- Contact deletion removes only the contact record; it does not delete the associated company.
+
+**Changes and Modifications:**
+- AI modified `app.py`, `templates/base.html`, and `static/style.css`; created `templates/contacts.html` and `templates/contact_detail.html`; updated this log. No student modifications are confirmed.
+
+**Files Affected:**
+- `app.py` (modified).
+- `templates/base.html` (modified).
+- `templates/contacts.html` (created).
+- `templates/contact_detail.html` (created).
+- `static/style.css` (modified).
+- `AI_USAGE.md` (reviewed and updated).
+- Live MySQL `contacts` and `companies` table metadata (read only).
+
+**Testing and Verification:**
+- Ran read-only `SHOW COLUMNS` queries for `contacts` and `companies`.
+- Ran `git diff --check`; no whitespace errors were reported.
+- Did not run CRUD operations or change contact records.
+
+**What Worked Well:**
+- The form and SQL fields match the live contact table's separate first and last names and company foreign key.
 
 **Lessons Learned:**
 - Pending student reflection.

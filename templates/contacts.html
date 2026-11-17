@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Contacts | Job Application Tracker{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Contact records</p>
+        <h1>Contacts</h1>
+        <p>Keep recruiter and company contact information easy to find.</p>
+    </div>
+</section>
+
+<div class="contacts-layout">
+    <section class="panel form-panel">
+        <h2>{{ "Edit contact" if edit_contact else "Add a contact" }}</h2>
+
+        {% if form_errors %}
+            <div class="form-errors" role="alert">
+                {% for error in form_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+
+        {% if companies %}
+            <form method="post"
+                  action="{{ url_for('contacts_edit', contact_id=edit_contact.contact_id) if edit_contact else url_for('contacts_create') }}">
+                <label for="company_id">Company <span aria-hidden="true">*</span></label>
+                <select id="company_id" name="company_id" required>
+                    <option value="">Choose a company</option>
+                    {% for company in companies %}
+                        <option value="{{ company.company_id }}"
+                            {% if form_values.get('company_id')|string == company.company_id|string %}selected{% endif %}>
+                            {{ company.company_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <div class="field-row">
+                    <div>
+                        <label for="first_name">First name <span aria-hidden="true">*</span></label>
+                        <input id="first_name" name="first_name" maxlength="50" required
+                               value="{{ form_values.get('first_name', '') }}">
+                    </div>
+                    <div>
+                        <label for="last_name">Last name <span aria-hidden="true">*</span></label>
+                        <input id="last_name" name="last_name" maxlength="50" required
+                               value="{{ form_values.get('last_name', '') }}">
+                    </div>
+                </div>
+
+                <label for="job_title">Job title</label>
+                <input id="job_title" name="job_title" maxlength="100"
+                       value="{{ form_values.get('job_title') or '' }}">
+
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" maxlength="100"
+                       value="{{ form_values.get('email') or '' }}">
+
+                <label for="phone">Phone</label>
+                <input id="phone" name="phone" type="tel" maxlength="20"
+                       value="{{ form_values.get('phone') or '' }}">
+
+                <label for="linkedin_url">LinkedIn URL</label>
+                <input id="linkedin_url" name="linkedin_url" maxlength="200" type="text"
+                       placeholder="linkedin.com/in/name"
+                       value="{{ form_values.get('linkedin_url') or '' }}">
+
+                <label for="notes">Notes</label>
+                <textarea id="notes" name="notes" rows="4">{{ form_values.get('notes') or '' }}</textarea>
+
+                <div class="form-actions">
+                    <button class="button button-primary" type="submit">
+                        {{ "Save changes" if edit_contact else "Add contact" }}
+                    </button>
+                    {% if edit_contact %}
+                        <a class="button button-secondary" href="{{ url_for('contacts_list') }}">Cancel</a>
+                    {% endif %}
+                </div>
+            </form>
+        {% else %}
+            <p class="empty-state">Add a company before creating a contact.</p>
+            <a class="button button-primary" href="{{ url_for('companies_list') }}">Go to companies</a>
+        {% endif %}
+    </section>
+
+    <section class="panel records-panel">
+        <div class="panel-heading">
+            <div>
+                <h2>Saved contacts</h2>
+                <p>{{ contacts|length }} record{{ "s" if contacts|length != 1 else "" }}</p>
+            </div>
+        </div>
+
+        {% if contacts %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Contact</th>
+                            <th scope="col">Company</th>
+                            <th scope="col">Job title</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Phone</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contact in contacts %}
+                            <tr>
+                                <td class="company-name">{{ contact.first_name }} {{ contact.last_name }}</td>
+                                <td>{{ contact.company_name }}</td>
+                                <td>{{ contact.job_title or "—" }}</td>
+                                <td>
+                                    {% if contact.email %}<a href="mailto:{{ contact.email }}">{{ contact.email }}</a>{% else %}—{% endif %}
+                                </td>
+                                <td>
+                                    {% if contact.phone %}<a href="tel:{{ contact.phone }}">{{ contact.phone }}</a>{% else %}—{% endif %}
+                                </td>
+                                <td>
+                                    <div class="row-actions">
+                                        <a class="button button-small button-secondary" href="{{ url_for('contacts_detail', contact_id=contact.contact_id) }}">View</a>
+                                        <a class="button button-small button-secondary" href="{{ url_for('contacts_edit', contact_id=contact.contact_id) }}">Edit</a>
+                                        <form method="post" action="{{ url_for('contacts_delete', contact_id=contact.contact_id) }}"
+                                              onsubmit="return confirm('Delete {{ contact.first_name }} {{ contact.last_name }}?');">
+                                            <button class="button button-small button-danger" type="submit">Delete</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="empty-state">No contacts yet. Add one using the form.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

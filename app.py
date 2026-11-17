@@ -344,5 +344,157 @@ def jobs_delete(job_id):
     return redirect(url_for("jobs_list"))
 
 
+def _contact_form_data():
+    """Read and validate fields submitted by the contact form."""
+    company_id_value = request.form.get("company_id", "").strip()
+    data = {
+        "company_id": None,
+        "first_name": request.form.get("first_name", "").strip(),
+        "last_name": request.form.get("last_name", "").strip(),
+        "email": request.form.get("email", "").strip() or None,
+        "phone": request.form.get("phone", "").strip() or None,
+        "job_title": request.form.get("job_title", "").strip() or None,
+        "linkedin_url": request.form.get("linkedin_url", "").strip() or None,
+        "notes": request.form.get("notes", "").strip() or None,
+    }
+    errors = []
+
+    if not company_id_value.isdigit():
+        errors.append("Select a company.")
+    else:
+        data["company_id"] = int(company_id_value)
+        if fetch_one(
+            "SELECT company_id FROM companies WHERE company_id = %s",
+            (data["company_id"],),
+        ) is None:
+            errors.append("The selected company does not exist.")
+
+    for field, label in (("first_name", "First name"), ("last_name", "Last name")):
+        value = data[field]
+        if not value:
+            errors.append(f"{label} is required.")
+        elif len(value) > 50:
+            errors.append(f"{label} must be 50 characters or fewer.")
+
+    if data["email"] and len(data["email"]) > 100:
+        errors.append("Email must be 100 characters or fewer.")
+    if data["phone"] and len(data["phone"]) > 20:
+        errors.append("Phone must be 20 characters or fewer.")
+    if data["job_title"] and len(data["job_title"]) > 100:
+        errors.append("Job title must be 100 characters or fewer.")
+    if data["linkedin_url"] and len(data["linkedin_url"]) > 200:
+        errors.append("LinkedIn URL must be 200 characters or fewer.")
+
+    return data, errors
+
+
+def _render_contacts(edit_contact=None, form_values=None, form_errors=None, status=200):
+    companies = fetch_all(
+        "SELECT company_id, company_name FROM companies ORDER BY company_name"
+    )
+    contacts = fetch_all(
+        """SELECT ct.*, co.company_name
+           FROM contacts AS ct
+           JOIN companies AS co ON co.company_id = ct.company_id
+           ORDER BY ct.last_name, ct.first_name, ct.contact_id"""
+    )
+    if form_values is None:
+        form_values = edit_contact or {}
+    return render_template(
+        "contacts.html",
+        contacts=contacts,
+        companies=companies,
+        edit_contact=edit_contact,
+        form_values=form_values,
+        form_errors=form_errors or [],
+    ), status
+
+
+@app.get("/contacts")
+def contacts_list():
+    """Show all contacts and the form for adding a contact."""
+    return _render_contacts()
+
+
+@app.post("/contacts")
+def contacts_create():
+    """Create a contact from the submitted form."""
+    data, errors = _contact_form_data()
+    if errors:
+        return _render_contacts(form_values=data, form_errors=errors, status=400)
+
+    insert_query(
+        """INSERT INTO contacts
+           (company_id, first_name, last_name, email, phone, job_title,
+            linkedin_url, notes)
+           VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+        (data["company_id"], data["first_name"], data["last_name"],
+         data["email"], data["phone"], data["job_title"],
+         data["linkedin_url"], data["notes"]),
+    )
+    flash("Contact added.", "success")
+    return redirect(url_for("contacts_list"))
+
+
+@app.get("/contacts/<int:contact_id>")
+def contacts_detail(contact_id):
+    """Show the details for one contact."""
+    contact = fetch_one(
+        """SELECT ct.*, co.company_name
+           FROM contacts AS ct
+           JOIN companies AS co ON co.company_id = ct.company_id
+           WHERE ct.contact_id = %s""",
+        (contact_id,),
+    )
+    if contact is None:
+        abort(404)
+    return render_template("contact_detail.html", contact=contact)
+
+
+@app.route("/contacts/<int:contact_id>/edit", methods=["GET", "POST"])
+def contacts_edit(contact_id):
+    """Display and process the edit form for a contact."""
+    contact = fetch_one(
+        "SELECT * FROM contacts WHERE contact_id = %s", (contact_id,)
+    )
+    if contact is None:
+        abort(404)
+
+    if request.method == "GET":
+        return _render_contacts(edit_contact=contact)
+
+    data, errors = _contact_form_data()
+    if errors:
+        return _render_contacts(
+            edit_contact=contact, form_values=data, form_errors=errors, status=400
+        )
+
+    execute_query(
+        """UPDATE contacts
+           SET company_id = %s, first_name = %s, last_name = %s,
+               email = %s, phone = %s, job_title = %s,
+               linkedin_url = %s, notes = %s
+           WHERE contact_id = %s""",
+        (data["company_id"], data["first_name"], data["last_name"],
+         data["email"], data["phone"], data["job_title"],
+         data["linkedin_url"], data["notes"], contact_id),
+    )
+    flash("Contact updated.", "success")
+    return redirect(url_for("contacts_list"))
+
+
+@app.post("/contacts/<int:contact_id>/delete")
+def contacts_delete(contact_id):
+    """Delete a contact."""
+    deleted_rows = execute_query(
+        "DELETE FROM contacts WHERE contact_id = %s", (contact_id,)
+    )
+    if deleted_rows:
+        flash("Contact deleted.", "success")
+    else:
+        flash("Contact not found.", "error")
+    return redirect(url_for("contacts_list"))
+
+
 if __name__ == "__main__":
     app.run(debug=True)
