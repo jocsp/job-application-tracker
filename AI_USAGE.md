@@ -826,3 +826,40 @@
 
 **Lessons Learned:**
 - Pending student reflection.
+
+### 2026-11-17 — Implement application CRUD pages and routes
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Add create, read, update, and delete functionality for application records.
+
+**Key Prompt(s):**
+- "let's add crud operations for applications"
+
+**AI Contribution:**
+- Inspected live `applications` and `jobs` table columns through read-only metadata queries.
+- Added application list, detail, create, edit, and delete routes; forms validate the selected job, required application date, optional response/interview dates, status length, and resume version length.
+- Added the applications form/list page, detail page, navigation link, and responsive styling.
+
+**Changes and Modifications:**
+- AI modified `app.py`, `templates/base.html`, and `static/style.css`; created `templates/applications.html` and `templates/application_detail.html`; updated this log. No student modifications are confirmed.
+
+**Files Affected:**
+- `app.py` (modified).
+- `templates/base.html` (modified).
+- `templates/applications.html` (created).
+- `templates/application_detail.html` (created).
+- `static/style.css` (modified).
+- `AI_USAGE.md` (reviewed and updated).
+- Live MySQL `applications` and `jobs` table metadata (read only).
+
+**Testing and Verification:**
+- Ran read-only `SHOW COLUMNS` queries for `applications` and `jobs`.
+- Ran `git diff --check`; no whitespace errors were reported.
+- Did not run CRUD operations or change application records.
+
+**What Worked Well:**
+- The query and form fields match the live application table, and the job selector uses existing job and company names.
+
+**Lessons Learned:**
+- Pending student reflection.

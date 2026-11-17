@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Application for {{ application.job_title }} | Job Application Tracker{% endblock %}
+
+{% block content %}
+<p class="eyebrow">Application details</p>
+<section class="panel detail-panel">
+    <div class="detail-heading">
+        <div>
+            <h1>{{ application.job_title }}</h1>
+            <p>{{ application.company_name }} · {{ application.status or "Applied" }}</p>
+        </div>
+        <div class="form-actions">
+            <a class="button button-secondary" href="{{ url_for('applications_list') }}">Back to applications</a>
+            <a class="button button-primary" href="{{ url_for('applications_edit', application_id=application.application_id) }}">Edit application</a>
+        </div>
+    </div>
+
+    <dl class="detail-grid">
+        <div><dt>Application date</dt><dd>{{ application.application_date }}</dd></div>
+        <div><dt>Resume version</dt><dd>{{ application.resume_version or "—" }}</dd></div>
+        <div><dt>Cover letter sent</dt><dd>{{ "Yes" if application.cover_letter_sent else "No" }}</dd></div>
+        <div><dt>Response date</dt><dd>{{ application.response_date or "—" }}</dd></div>
+        <div><dt>Interview date</dt><dd>{{ application.interview_date or "—" }}</dd></div>
+        <div class="detail-notes"><dt>Notes</dt><dd>{{ application.notes or "—" }}</dd></div>
+    </dl>
+</section>
+{% endblock %}

@@ -1,7 +1,7 @@
 """Initial Flask application for the Job Application Tracker."""
 
 import os
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 
 from flask import Flask, abort, flash, jsonify, redirect, render_template, request, url_for
@@ -494,6 +494,187 @@ def contacts_delete(contact_id):
     else:
         flash("Contact not found.", "error")
     return redirect(url_for("contacts_list"))
+
+
+def _application_form_data():
+    """Read and validate fields submitted by the application form."""
+    job_id_value = request.form.get("job_id", "").strip()
+    application_date_value = request.form.get("application_date", "").strip()
+    response_date_value = request.form.get("response_date", "").strip()
+    interview_date_value = request.form.get("interview_date", "").strip()
+    status_value = request.form.get("status", "Applied").strip() or "Applied"
+    resume_version = request.form.get("resume_version", "").strip() or None
+
+    data = {
+        "job_id": None,
+        "application_date": None,
+        "status": status_value,
+        "resume_version": resume_version,
+        "cover_letter_sent": request.form.get("cover_letter_sent") == "on",
+        "response_date": None,
+        "interview_date": None,
+        "notes": request.form.get("notes", "").strip() or None,
+    }
+    errors = []
+
+    if not job_id_value.isdigit():
+        errors.append("Select a job.")
+    else:
+        data["job_id"] = int(job_id_value)
+        if fetch_one("SELECT job_id FROM jobs WHERE job_id = %s", (data["job_id"],)) is None:
+            errors.append("The selected job does not exist.")
+
+    if not application_date_value:
+        errors.append("Application date is required.")
+    else:
+        try:
+            data["application_date"] = date.fromisoformat(application_date_value)
+        except ValueError:
+            errors.append("Application date must be a valid date.")
+
+    if response_date_value:
+        try:
+            data["response_date"] = date.fromisoformat(response_date_value)
+        except ValueError:
+            errors.append("Response date must be a valid date.")
+
+    if interview_date_value:
+        try:
+            data["interview_date"] = datetime.fromisoformat(interview_date_value)
+        except ValueError:
+            errors.append("Interview date and time must be valid.")
+
+    if len(status_value) > 30:
+        errors.append("Status must be 30 characters or fewer.")
+    if resume_version and len(resume_version) > 50:
+        errors.append("Resume version must be 50 characters or fewer.")
+
+    return data, errors
+
+
+def _render_applications(edit_application=None, form_values=None, form_errors=None, status=200):
+    jobs = fetch_all(
+        """SELECT j.job_id, j.job_title, c.company_name
+           FROM jobs AS j
+           JOIN companies AS c ON c.company_id = j.company_id
+           ORDER BY c.company_name, j.job_title"""
+    )
+    applications = fetch_all(
+        """SELECT a.*, j.job_title, c.company_name
+           FROM applications AS a
+           JOIN jobs AS j ON j.job_id = a.job_id
+           JOIN companies AS c ON c.company_id = j.company_id
+           ORDER BY a.application_date DESC, a.application_id DESC"""
+    )
+    if form_values is None:
+        form_values = edit_application or {
+            "application_date": date.today(),
+            "status": "Applied",
+            "cover_letter_sent": False,
+        }
+    return render_template(
+        "applications.html",
+        applications=applications,
+        jobs=jobs,
+        edit_application=edit_application,
+        form_values=form_values,
+        form_errors=form_errors or [],
+    ), status
+
+
+@app.get("/applications")
+def applications_list():
+    """Show all applications and the form for adding an application."""
+    return _render_applications()
+
+
+@app.post("/applications")
+def applications_create():
+    """Create an application from the submitted form."""
+    data, errors = _application_form_data()
+    if errors:
+        return _render_applications(
+            form_values=data, form_errors=errors, status=400
+        )
+
+    insert_query(
+        """INSERT INTO applications
+           (job_id, application_date, status, resume_version,
+            cover_letter_sent, response_date, interview_date, notes)
+           VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+        (data["job_id"], data["application_date"], data["status"],
+         data["resume_version"], data["cover_letter_sent"],
+         data["response_date"], data["interview_date"], data["notes"]),
+    )
+    flash("Application added.", "success")
+    return redirect(url_for("applications_list"))
+
+
+@app.get("/applications/<int:application_id>")
+def applications_detail(application_id):
+    """Show the details for one application."""
+    application = fetch_one(
+        """SELECT a.*, j.job_title, c.company_name
+           FROM applications AS a
+           JOIN jobs AS j ON j.job_id = a.job_id
+           JOIN companies AS c ON c.company_id = j.company_id
+           WHERE a.application_id = %s""",
+        (application_id,),
+    )
+    if application is None:
+        abort(404)
+    return render_template("application_detail.html", application=application)
+
+
+@app.route("/applications/<int:application_id>/edit", methods=["GET", "POST"])
+def applications_edit(application_id):
+    """Display and process the edit form for an application."""
+    application = fetch_one(
+        "SELECT * FROM applications WHERE application_id = %s",
+        (application_id,),
+    )
+    if application is None:
+        abort(404)
+
+    if request.method == "GET":
+        return _render_applications(edit_application=application)
+
+    data, errors = _application_form_data()
+    if errors:
+        return _render_applications(
+            edit_application=application,
+            form_values=data,
+            form_errors=errors,
+            status=400,
+        )
+
+    execute_query(
+        """UPDATE applications
+           SET job_id = %s, application_date = %s, status = %s,
+               resume_version = %s, cover_letter_sent = %s,
+               response_date = %s, interview_date = %s, notes = %s
+           WHERE application_id = %s""",
+        (data["job_id"], data["application_date"], data["status"],
+         data["resume_version"], data["cover_letter_sent"],
+         data["response_date"], data["interview_date"], data["notes"],
+         application_id),
+    )
+    flash("Application updated.", "success")
+    return redirect(url_for("applications_list"))
+
+
+@app.post("/applications/<int:application_id>/delete")
+def applications_delete(application_id):
+    """Delete an application."""
+    deleted_rows = execute_query(
+        "DELETE FROM applications WHERE application_id = %s",
+        (application_id,),
+    )
+    if deleted_rows:
+        flash("Application deleted.", "success")
+    else:
+        flash("Application not found.", "error")
+    return redirect(url_for("applications_list"))
 
 
 if __name__ == "__main__":
