@@ -112,13 +112,24 @@ td { color: #3e4a60; }
 .detail-grid dt { margin-bottom: 6px; color: #65718a; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .detail-grid dd { margin: 0; overflow-wrap: anywhere; }
 .detail-notes { grid-column: 1 / -1; }
-.messages { margin-bottom: 18px; }
-.message, .form-errors { padding: 11px 13px; border-radius: 7px; font-size: 14px; }
-.message { margin: 0 0 8px; }
-.message-success { color: #17643a; background: #e9f7ef; }
-.message-error, .form-errors { color: #912018; background: #fff0ef; }
+.toast-container { position: fixed; z-index: 1000; top: 20px; right: 20px; display: grid; gap: 10px; width: min(420px, calc(100vw - 40px)); pointer-events: none; }
+.toast { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 16px; border: 1px solid transparent; border-radius: 10px; box-shadow: 0 10px 30px rgb(20 35 70 / 16%); font-size: 14px; pointer-events: auto; opacity: 1; transform: translateY(0); transition: opacity 250ms ease, transform 250ms ease; }
+.toast p { margin: 0; }
+.toast-success { color: #17643a; background: #e9f7ef; border-color: #c7ead4; }
+.toast-info { color: #24438c; background: #eef3ff; border-color: #d7e2ff; }
+.toast-error, .form-errors { color: #912018; background: #fff0ef; }
+.toast-close { flex: 0 0 auto; padding: 0 2px; color: inherit; font: inherit; font-size: 22px; line-height: 1; background: transparent; border: 0; cursor: pointer; }
+.toast.is-dismissing { opacity: 0; transform: translateY(-8px); }
 .form-errors p { margin: 0 0 5px; }
 .form-errors p:last-child { margin-bottom: 0; }
+
+@media (max-width: 520px) {
+    .toast-container { top: 12px; right: 12px; width: calc(100vw - 24px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toast { transition: none; }
+}
 
 @media (max-width: 900px) {
     .companies-layout, .jobs-layout, .contacts-layout, .applications-layout { grid-template-columns: 1fr; }

@@ -30,17 +30,23 @@
 - Asked whether the updated `schema.sql` now exactly matches the provided alternate schema.
 - Asked to make `schema.sql` match the newly supplied schema exactly.
 - Asked to add a dashboard and a job matching feature that ranks jobs by the percentage of required skills matching the user's skills, and requested a commit message.
+- Asked to update the README with setup instructions.
+- Asked to replace the page-shifting success message with a toast notification that disappears after about five seconds.
 
 ## What Worked Well
 
 - Repository inspection identified two untracked documentation files and no tracked changes, supporting a documentation-focused commit message.
 - The dashboard can summarize existing application data, and the matching feature uses explicitly entered skill lists so it can calculate transparent exact-skill percentages.
+- The README setup steps reflect the repository's current requirements, environment template, fresh-install schema, existing-database migration, and optional seed script.
+- Success notices now use a fixed toast overlay, so they don’t push page content down; error notices remain visible until dismissed.
 
 ## What I Modified
 
 - The AI assistant populated the previously empty `AI_USAGE.md`. Independent student modifications have not been documented or confirmed.
 - The AI assistant created `schema.sql` from the user-provided schema; no independent student edits to that output are confirmed.
 - The AI assistant added a nullable `required_skills` field and an upgrade script because the existing jobs schema did not store the skill list needed for matching. The user's skill list is held in the Flask session; no independent student modifications to this work are confirmed.
+- The AI assistant rewrote `README.md` with installation and run instructions; no independent student modifications are confirmed.
+- The AI assistant changed the shared flash-message presentation to fixed toast notifications; no independent student modifications are confirmed.
 
 ## Lessons Learned
 
@@ -929,3 +935,66 @@
 
 **Lessons Learned:**
 - Existing databases need the included one-time migration before using the new required-skills field; pending student reflection on the feature implementation.
+
+### 2026-11-17 — Document project setup in README
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Document how to install dependencies, configure environment variables, initialize the MySQL database, and run the Flask app.
+
+**Key Prompt(s):**
+- "update the README with setup instructions"
+
+**AI Contribution:**
+- Added setup instructions for cloning the project, creating a virtual environment on macOS/Linux or Windows, installing dependencies, configuring `.env`, creating or migrating the database, optionally loading sample data, and starting Flask.
+- Documented Job Match input format and percentage calculation, plus the need to run the skills migration once on an existing database.
+
+**Changes and Modifications:**
+- AI rewrote `README.md` and updated this log. No student modifications are confirmed.
+
+**Files Affected:**
+- `README.md` (rewritten).
+- `AI_USAGE.md` (updated).
+- `.env.example`, `requirements.txt`, `schema.sql`, `migration_add_required_skills.sql`, `seed.sql`, `database.py`, and `app.py` (reviewed to align instructions; unchanged in this task).
+
+**Testing and Verification:**
+- Ran `git diff --check`; no whitespace errors were reported.
+- Did not run setup commands or connect to MySQL.
+
+**What Worked Well:**
+- The guide distinguishes new database setup from upgrading an existing database and calls out that the seed script should only be used once on an empty database.
+
+**Lessons Learned:**
+- Pending student reflection.
+
+### 2026-11-17 — Show flash messages as toast notifications
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Keep success messages from shifting page content and have them dismiss automatically after about five seconds.
+
+**Key Prompt(s):**
+- "I don't don't like these company added message? it moves the entire screen, could it be added like a toast, that dissapears in 5 seconds or so"
+
+**AI Contribution:**
+- Moved Flask flash messages into a fixed-position toast container that overlays the page.
+- Added a close button for each toast and automatic dismissal after five seconds for success and informational messages. Error messages remain until manually dismissed.
+- Added responsive positioning and reduced-motion support.
+
+**Changes and Modifications:**
+- AI modified `templates/base.html`, `static/style.css`, and this log; created `static/app.js`. No student modifications are confirmed.
+
+**Files Affected:**
+- `templates/base.html` and `static/style.css` (modified).
+- `static/app.js` (created).
+- `AI_USAGE.md` (updated).
+
+**Testing and Verification:**
+- Ran `git diff --check`; no whitespace errors were reported.
+- Did not run the app or verify the toast in a browser.
+
+**What Worked Well:**
+- Flash messages are positioned outside the normal page layout, so they no longer move the page content.
+
+**Lessons Learned:**
+- Pending student reflection.
