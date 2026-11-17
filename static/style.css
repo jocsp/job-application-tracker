@@ -36,7 +36,7 @@ a { color: #3157b7; }
 .panel h2 { margin: 0 0 18px; font-size: 19px; }
 .form-panel label { display: block; margin: 14px 0 6px; color: #39455b; font-size: 13px; font-weight: 650; }
 .form-panel label span { color: #b42318; }
-.form-panel input, .form-panel textarea { width: 100%; padding: 10px 11px; color: #172033; font: inherit; border: 1px solid #cfd6e3; border-radius: 7px; background: #fff; }
+.form-panel input, .form-panel textarea { width: 100%; min-width: 0; padding: 10px 11px; color: #172033; font: inherit; border: 1px solid #cfd6e3; border-radius: 7px; background: #fff; }
 .form-panel input:focus, .form-panel textarea:focus { outline: 3px solid rgb(49 87 183 / 15%); border-color: #3157b7; }
 .form-panel select { width: 100%; padding: 10px 11px; color: #172033; font: inherit; border: 1px solid #cfd6e3; border-radius: 7px; background: #fff; }
 .form-panel select:focus { outline: 3px solid rgb(49 87 183 / 15%); border-color: #3157b7; }
@@ -44,6 +44,8 @@ a { color: #3157b7; }
 .checkbox-label input { width: auto; }
 .form-panel textarea { resize: vertical; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field-row > div { min-width: 0; }
+.application-date-fields { grid-template-columns: minmax(0, 1fr); }
 .form-actions, .row-actions { display: flex; gap: 8px; align-items: center; }
 .form-actions { margin-top: 18px; }
 .button { display: inline-flex; justify-content: center; align-items: center; min-height: 38px; padding: 8px 12px; border: 1px solid transparent; border-radius: 7px; font: inherit; font-size: 13px; font-weight: 650; text-decoration: none; cursor: pointer; }

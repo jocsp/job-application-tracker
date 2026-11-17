@@ -32,6 +32,8 @@
 - Asked to add a dashboard and a job matching feature that ranks jobs by the percentage of required skills matching the user's skills, and requested a commit message.
 - Asked to update the README with setup instructions.
 - Asked to replace the page-shifting success message with a toast notification that disappears after about five seconds.
+- Shared a MySQL `Unknown column 'required_skills' in 'field list'` error when adding a job and asked for help resolving it.
+- Reported that the interview date/time control overflows the applications form and asked to fix it.
 
 ## What Worked Well
 
@@ -39,6 +41,8 @@
 - The dashboard can summarize existing application data, and the matching feature uses explicitly entered skill lists so it can calculate transparent exact-skill percentages.
 - The README setup steps reflect the repository's current requirements, environment template, fresh-install schema, existing-database migration, and optional seed script.
 - Success notices now use a fixed toast overlay, so they don’t push page content down; error notices remain visible until dismissed.
+- The traceback confirmed the new job form expects the `required_skills` column, while the existing database still needs the provided migration.
+- The interview date/time control fits the form when its date fields use a full-width row and grid children can shrink within their columns.
 
 ## What I Modified
 
@@ -46,7 +50,9 @@
 - The AI assistant created `schema.sql` from the user-provided schema; no independent student edits to that output are confirmed.
 - The AI assistant added a nullable `required_skills` field and an upgrade script because the existing jobs schema did not store the skill list needed for matching. The user's skill list is held in the Flask session; no independent student modifications to this work are confirmed.
 - The AI assistant rewrote `README.md` with installation and run instructions; no independent student modifications are confirmed.
+- The AI assistant diagnosed the missing-column error and recommended applying the existing schema migration. No application files were changed for this diagnosis.
 - The AI assistant changed the shared flash-message presentation to fixed toast notifications; no independent student modifications are confirmed.
+- The AI assistant adjusted the applications form layout and shared form-field sizing to prevent date/time input overflow; no student modifications are confirmed.
 
 ## Lessons Learned
 
@@ -998,3 +1004,64 @@
 
 **Lessons Learned:**
 - Pending student reflection.
+
+### 2026-11-17 — Diagnose missing required-skills column
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Explain the MySQL error encountered when creating a job after adding the Job Match feature.
+
+**Key Prompt(s):**
+- User shared a traceback reporting `Unknown column 'required_skills' in 'field list'` from the job insert route.
+
+**AI Contribution:**
+- Identified that the existing `jobs` table had not yet been updated with the column expected by the new app code.
+- Reviewed the existing `migration_add_required_skills.sql`, which adds the nullable column without removing existing records, and provided instructions to run it once.
+
+**Changes and Modifications:**
+- No application code was changed. AI added this documentation entry; no student modifications are confirmed.
+
+**Files Affected:**
+- `migration_add_required_skills.sql` (reviewed; unchanged).
+- `AI_USAGE.md` (updated).
+
+**Testing and Verification:**
+- Read the migration file and the supplied MySQL traceback.
+- Did not execute the migration or connect to the user's MySQL database.
+
+**What Worked Well:**
+- The error message directly identified the column that was missing from the existing database schema.
+
+**Lessons Learned:**
+- Schema changes in `schema.sql` do not update tables that already exist; those databases need the matching migration applied once.
+
+### 2026-11-17 — Fix interview date/time field overflow
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Keep the interview date/time input within the applications form panel.
+
+**Key Prompt(s):**
+- "in the applications page, the interview date and time looks wrong, like it overflows" followed by "fix it please"
+
+**AI Contribution:**
+- Changed the response-date and interview-date controls to stack in a full-width grid row.
+- Allowed form grid children and inputs to shrink within their panels, preventing native date/time controls from forcing horizontal overflow.
+
+**Changes and Modifications:**
+- AI modified `templates/applications.html`, `static/style.css`, and this log. No student modifications are confirmed.
+
+**Files Affected:**
+- `templates/applications.html` (modified).
+- `static/style.css` (modified).
+- `AI_USAGE.md` (updated).
+
+**Testing and Verification:**
+- Ran `git diff --check`; no whitespace errors were reported.
+- Did not run the app or verify the layout in a browser.
+
+**What Worked Well:**
+- The date/time input now receives a full row in the narrow application form instead of sharing a half-width column.
+
+**Lessons Learned:**
+- Native date/time controls have a minimum intrinsic width, so they may overflow a narrow grid column unless the layout allows them to shrink or stack.
