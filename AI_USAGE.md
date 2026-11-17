@@ -18,7 +18,9 @@
 - Asked how to create the MySQL environment variables used by `database.py`.
 - Asked whether the MySQL environment variables can be stored in a `.env` file as in Node/Express.
 - Asked to create both `.env` and `.env.example` and add `python-dotenv` to `requirements.txt`.
+- Asked for a project status review and a step-by-step plan to finish the application.
 - Asked for a commit message for the current backend and environment configuration changes.
+- Asked to fix `seed.sql` so it matches the database schema and provide a commit message.
 
 ## What Worked Well
 
@@ -64,6 +66,70 @@
 
 **What Worked Well:**
 - Inspection established that the pending changes concern AI project instructions and usage documentation.
+
+**Lessons Learned:**
+- Pending student reflection.
+
+### 2026-11-17 — Align seed data with the database schema
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Correct the sample data script so its inserts and status updates conform to the current table definitions.
+
+**Key Prompt(s):**
+- "fix seed.sql and give me the commit message"
+
+**AI Contribution:**
+- Changed contact inserts to use the schema's `contact_name` and `title` columns.
+- Replaced unsupported application statuses with allowed enum values: `Screening`, `Interview`, and `Offer`.
+
+**Changes and Modifications:**
+- AI edited `seed.sql` and updated this log. No student modifications are confirmed.
+
+**Files Affected:**
+- `seed.sql` (modified and reviewed).
+- `AI_USAGE.md` (reviewed and updated).
+- `schema.sql` (reviewed for compatibility).
+
+**Testing and Verification:**
+- Compared all changed status values and contact column names with `schema.sql`.
+- Ran `git diff --check`; it reported no whitespace errors.
+- Did not execute the script against MySQL, so runtime behavior remains unverified.
+
+**What Worked Well:**
+- The modified contact fields and application statuses now match the names and enum values in `schema.sql` by inspection.
+
+**Lessons Learned:**
+- Pending student reflection.
+
+### 2026-11-17 — Review project progress and remaining work
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Compare the current repository with the course specification and identify completed work, gaps, and a practical order to continue.
+
+**Key Prompt(s):**
+- "it's been a while since I worked in this project, let me know what remains to do, what parts have we done so far and what parts are missing, which is a plan to continue doing the rest."
+
+**AI Contribution:**
+- Inspected tracked files, recent commits, the schema, seed script, database helper module, requirements, and README.
+- Read the course project specification and identified the required CRUD pages, dashboard, job matching feature, setup documentation, and recorded demo.
+- Compared `seed.sql` statements with the current schema and found incompatible application status values and contact column names.
+
+**Changes and Modifications:**
+- No application code was changed. This log was updated to record the review.
+
+**Files Affected:**
+- `AI_USAGE.md` (reviewed and updated).
+- `README.md`, `requirements.txt`, `database.py`, `schema.sql`, `seed.sql`, and files under `specifications/` (reviewed).
+
+**Testing and Verification:**
+- Ran `git status --short`, `git log -6 --oneline`, and listed repository files.
+- Extracted and reviewed the project requirements from the DOCX specification.
+- No application tests or database execution were performed.
+
+**What Worked Well:**
+- The file and specification review provided a concrete baseline and exposed that the current seed data does not match the schema.
 
 **Lessons Learned:**
 - Pending student reflection.

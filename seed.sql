@@ -29,21 +29,20 @@ job_type, date_posted) VALUES
 INSERT INTO applications (job_id, application_date, status,
 resume_version, cover_letter_sent) VALUES
 (1, '2025-01-16', 'Applied', 'v2.1', TRUE),
-(3, '2025-01-13', 'Interview Scheduled', 'v2.1', TRUE),
+(3, '2025-01-13', 'Screening', 'v2.1', TRUE),
 (4, '2025-01-09', 'Rejected', 'v2.0', FALSE),
 (5, '2025-01-15', 'Applied', 'v2.1', TRUE),
-(7, '2025-01-12', 'Phone Screen', 'v2.1', TRUE);
+(7, '2025-01-12', 'Screening', 'v2.1', TRUE);
 
-INSERT INTO contacts (company_id, first_name, last_name, email,
-job_title) VALUES
-(1, 'Sarah', 'Johnson', 'sjohnson@techsolutions.com', 'HR Manager'),
-(2, 'Michael', 'Chen', 'mchen@dataanalytics.com', 'Technical Recruiter'),
-(3, 'Emily', 'Williams', 'ewilliams@cloudsystems.com', 'Hiring Manager'),
-(4, 'David', 'Brown', NULL, 'Senior Developer'),
-(5, 'Lisa', 'Garcia', 'lgarcia@smarttech.com', 'Talent Acquisition');
+INSERT INTO contacts (company_id, contact_name, email, title) VALUES
+(1, 'Sarah Johnson', 'sjohnson@techsolutions.com', 'HR Manager'),
+(2, 'Michael Chen', 'mchen@dataanalytics.com', 'Technical Recruiter'),
+(3, 'Emily Williams', 'ewilliams@cloudsystems.com', 'Hiring Manager'),
+(4, 'David Brown', NULL, 'Senior Developer'),
+(5, 'Lisa Garcia', 'lgarcia@smarttech.com', 'Talent Acquisition');
 
 UPDATE applications
-SET status = 'Interview Completed'
+SET status = 'Interview'
 WHERE application_id = 3;
 
 INSERT INTO jobs (company_id, job_title, salary_min, salary_max,
@@ -60,7 +59,7 @@ job_type, date_posted) VALUES
 (4, 'Intern - Development', 32000, 42000, 'Internship', '2025-01-14');
 
 UPDATE applications
-SET status = 'Interview Completed'
+SET status = 'Interview'
 WHERE application_id = 2;
 
 INSERT INTO companies (company_name, industry, city, state)
@@ -83,13 +82,12 @@ SET notes = CONCAT('Applied to Senior Developer position on ', CURDATE())
 WHERE company_id = 4;
 
 
-INSERT INTO contacts (company_id, first_name, last_name, email,
-job_title)
-VALUES (4, 'Robert', 'Kim', 'rkim@digitalinnovations.com',
+INSERT INTO contacts (company_id, contact_name, email, title)
+VALUES (4, 'Robert Kim', 'rkim@digitalinnovations.com',
 'Engineering Manager');
 
 UPDATE applications
-SET status = 'Offer Accepted'
+SET status = 'Offer'
 WHERE application_id = 1;
 
 COMMIT;
