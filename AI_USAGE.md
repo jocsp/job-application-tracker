@@ -48,18 +48,13 @@
 
 ## What I Modified
 
-- The AI assistant populated the previously empty `AI_USAGE.md`. Independent student modifications have not been documented or confirmed.
-- The AI assistant created `schema.sql` from the user-provided schema; no independent student edits to that output are confirmed.
-- The AI assistant added a nullable `required_skills` field and an upgrade script because the existing jobs schema did not store the skill list needed for matching. The user's skill list is held in the Flask session; no independent student modifications to this work are confirmed.
-- The AI assistant rewrote `README.md` with installation and run instructions; no independent student modifications are confirmed.
-- The AI assistant diagnosed the missing-column error and recommended applying the existing schema migration. No application files were changed for this diagnosis.
-- The AI assistant changed the shared flash-message presentation to fixed toast notifications; no independent student modifications are confirmed.
-- The AI assistant adjusted the applications form layout and shared form-field sizing to prevent date/time input overflow; no student modifications are confirmed.
-- The AI assistant updated each sample job insert in `seed.sql` with required skills; no student modifications are confirmed.
+- Modified the interview date and time input field, it was overflowing
+- Modified the database to include the skills field
+- Modified the notification message, it was not correct and it was shifting the content
 
 ## Lessons Learned
 
-- Pending student reflection.
+- AI generated code works well, specially if the project is not that complicated or complex. But it still makes mistakes and some stuff may not work correctly. To work at high paying jobs or at complex tasks, I need to understand what I'm doing to fix these LLMs erros.
 
 ## Detailed AI Usage Log
 
