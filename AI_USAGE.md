@@ -21,6 +21,7 @@
 - Asked for a project status review and a step-by-step plan to finish the application.
 - Asked for a commit message for the current backend and environment configuration changes.
 - Asked to fix `seed.sql` so it matches the database schema and provide a commit message.
+- Asked to create the initial `app.py`, test the database connection with the provided environment variables, and suggest a commit message.
 
 ## What Worked Well
 
@@ -66,6 +67,40 @@
 
 **What Worked Well:**
 - Inspection established that the pending changes concern AI project instructions and usage documentation.
+
+**Lessons Learned:**
+- Pending student reflection.
+
+### 2026-11-17 — Create initial Flask app and verify database connection
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Create the first Flask application file and check connectivity using local environment settings.
+
+**Key Prompt(s):**
+- "create the initial app.py and test whether we can connect to the database using the env variables that i just provided"
+- "and give me the commit message"
+
+**AI Contribution:**
+- Created `app.py` with a basic home route and `/health/database` route.
+- Ran a direct `SELECT 1` through `database.py`, then requested the Flask database health route through Flask's test client.
+- Recommended `feat: add initial Flask app and database health check`.
+
+**Changes and Modifications:**
+- AI created `app.py` and updated this log. No student modifications are confirmed.
+
+**Files Affected:**
+- `app.py` (created).
+- `AI_USAGE.md` (reviewed and updated).
+- `.env` and `database.py` (used for verification).
+
+**Testing and Verification:**
+- Using the project's `.venv`, the direct `SELECT 1 AS connected` query passed.
+- Flask's `/health/database` test-client request returned HTTP 200 with `{"database":"connected"}`.
+- No other application tests were run.
+
+**What Worked Well:**
+- Both the database helper and the Flask health route connected successfully using the local `.env` configuration.
 
 **Lessons Learned:**
 - Pending student reflection.
