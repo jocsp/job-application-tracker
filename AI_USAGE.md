@@ -22,6 +22,7 @@
 - Asked for a commit message for the current backend and environment configuration changes.
 - Asked to fix `seed.sql` so it matches the database schema and provide a commit message.
 - Asked to create the initial `app.py`, test the database connection with the provided environment variables, and suggest a commit message.
+- Asked to implement company CRUD operations in the Flask project and provide commit messages.
 
 ## What Worked Well
 
@@ -67,6 +68,43 @@
 
 **What Worked Well:**
 - Inspection established that the pending changes concern AI project instructions and usage documentation.
+
+**Lessons Learned:**
+- Pending student reflection.
+
+### 2026-11-17 — Implement company CRUD pages and routes
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Add company create, read, update, and delete functionality to the Flask application.
+
+**Key Prompt(s):**
+- "there is already a job_tracker database in mysql, let's now create crud operations for the companies and give me the commit messages"
+
+**AI Contribution:**
+- Inspected the live `companies` table columns using a read-only `SHOW COLUMNS` query; it includes the planned fields and an additional nullable `created_at` column.
+- Added routes to list, view, create, edit, and delete company records, plus form validation and foreign-key deletion feedback.
+- Added the shared page layout, companies list/form, company detail page, and responsive CSS.
+- Used parameterized queries through `database.py` helpers.
+
+**Changes and Modifications:**
+- AI modified `app.py` and `static/style.css`, created `templates/base.html`, `templates/companies.html`, and `templates/company_detail.html`, and updated this log. No student modifications are confirmed.
+
+**Files Affected:**
+- `app.py` (modified).
+- `templates/base.html` (created).
+- `templates/companies.html` (created).
+- `templates/company_detail.html` (created).
+- `static/style.css` (created).
+- `AI_USAGE.md` (reviewed and updated).
+- MySQL `companies` table metadata (read only).
+
+**Testing and Verification:**
+- Read the actual `companies` table column metadata through the configured database connection.
+- No CRUD writes or application tests were run; no company data was changed.
+
+**What Worked Well:**
+- The route queries use the live table's column names and allow its extra nullable `created_at` field without requiring schema changes.
 
 **Lessons Learned:**
 - Pending student reflection.
@@ -511,6 +549,46 @@
 
 **What Worked Well:**
 - Repository inspection distinguished the intended layout from files that have actually been created.
+
+**Lessons Learned:**
+- Pending student reflection.
+
+### 2026-11-17 — Implement company CRUD functionality
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Implement create, read, update, and delete for company records in the Flask application.
+
+**Key Prompt(s):**
+- "there is already a job_tracker database in mysql, let's now create crud operations for the companies and give me the commit messages"
+
+**AI Contribution:**
+- Inspected the live `companies` table with a read-only `SHOW COLUMNS` query; it has the planned columns plus a nullable `created_at` field.
+- Added list, detail, create, edit, and delete routes using parameterized SQL and the existing database helpers.
+- Added required-field and length validation, confirmation before deletion, and a message when related jobs or contacts block deletion.
+- Created shared layout, companies list/form and detail templates, plus responsive styling. Added a development secret key fallback so Flask flash messages work; `.env.example` shows how to configure `FLASK_SECRET_KEY`.
+- Suggested commit message `feat: add CRUD operations for companies`.
+
+**Changes and Modifications:**
+- AI modified `app.py`, `.env.example`, and `static/style.css`; created `templates/base.html`, `templates/companies.html`, and `templates/company_detail.html`; updated this log. No student modifications are confirmed.
+
+**Files Affected:**
+- `app.py` (modified).
+- `.env.example` (modified).
+- `static/style.css` (created and modified).
+- `templates/base.html` (created).
+- `templates/companies.html` (created).
+- `templates/company_detail.html` (created).
+- `AI_USAGE.md` (reviewed and updated).
+- MySQL `companies` table metadata (read only).
+
+**Testing and Verification:**
+- Confirmed the live table's column names through a read-only query.
+- Ran `git diff --check`; it reported no whitespace errors.
+- Did not run CRUD tests or alter company data.
+
+**What Worked Well:**
+- The routes match the existing table fields and accommodate its extra nullable `created_at` column.
 
 **Lessons Learned:**
 - Pending student reflection.

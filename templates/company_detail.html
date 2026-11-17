@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}{{ company.company_name }} | Job Application Tracker{% endblock %}
+
+{% block content %}
+<p class="eyebrow">Company details</p>
+<section class="panel detail-panel">
+    <div class="detail-heading">
+        <div>
+            <h1>{{ company.company_name }}</h1>
+            <p>{{ company.industry or "Industry not specified" }}</p>
+        </div>
+        <div class="form-actions">
+            <a class="button button-secondary" href="{{ url_for('companies_list') }}">Back to companies</a>
+            <a class="button button-primary" href="{{ url_for('companies_edit', company_id=company.company_id) }}">Edit company</a>
+        </div>
+    </div>
+
+    <dl class="detail-grid">
+        <div><dt>Location</dt><dd>{{ company.city or "—" }}{% if company.city and company.state %}, {% endif %}{{ company.state or "" }}</dd></div>
+        <div>
+            <dt>Website</dt>
+            <dd>
+                {% if company.website %}
+                    <a href="{{ company.website if company.website.startswith('http://') or company.website.startswith('https://') else 'https://' ~ company.website }}" target="_blank" rel="noopener noreferrer">{{ company.website }}</a>
+                {% else %}—{% endif %}
+            </dd>
+        </div>
+        <div class="detail-notes"><dt>Notes</dt><dd>{{ company.notes or "—" }}</dd></div>
+    </dl>
+</section>
+{% endblock %}

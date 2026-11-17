@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Companies | Job Application Tracker{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Company records</p>
+        <h1>Companies</h1>
+        <p>Keep the organizations connected to your job search in one place.</p>
+    </div>
+</section>
+
+<div class="companies-layout">
+    <section class="panel form-panel">
+        <h2>{{ "Edit company" if edit_company else "Add a company" }}</h2>
+
+        {% if form_errors %}
+            <div class="form-errors" role="alert">
+                {% for error in form_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post"
+              action="{{ url_for('companies_edit', company_id=edit_company.company_id) if edit_company else url_for('companies_create') }}">
+            <label for="company_name">Company name <span aria-hidden="true">*</span></label>
+            <input id="company_name" name="company_name" maxlength="100" required
+                   value="{{ form_values.get('company_name', '') }}">
+
+            <label for="industry">Industry</label>
+            <input id="industry" name="industry" maxlength="50"
+                   value="{{ form_values.get('industry') or '' }}">
+
+            <label for="website">Website</label>
+            <input id="website" name="website" maxlength="200" type="text"
+                   placeholder="www.example.com"
+                   value="{{ form_values.get('website') or '' }}">
+
+            <div class="field-row">
+                <div>
+                    <label for="city">City</label>
+                    <input id="city" name="city" maxlength="50"
+                           value="{{ form_values.get('city') or '' }}">
+                </div>
+                <div>
+                    <label for="state">State</label>
+                    <input id="state" name="state" maxlength="50"
+                           value="{{ form_values.get('state') or '' }}">
+                </div>
+            </div>
+
+            <label for="notes">Notes</label>
+            <textarea id="notes" name="notes" rows="4">{{ form_values.get('notes') or '' }}</textarea>
+
+            <div class="form-actions">
+                <button class="button button-primary" type="submit">
+                    {{ "Save changes" if edit_company else "Add company" }}
+                </button>
+                {% if edit_company %}
+                    <a class="button button-secondary" href="{{ url_for('companies_list') }}">Cancel</a>
+                {% endif %}
+            </div>
+        </form>
+    </section>
+
+    <section class="panel records-panel">
+        <div class="panel-heading">
+            <div>
+                <h2>Saved companies</h2>
+                <p>{{ companies|length }} record{{ "s" if companies|length != 1 else "" }}</p>
+            </div>
+        </div>
+
+        {% if companies %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Company</th>
+                            <th scope="col">Industry</th>
+                            <th scope="col">Location</th>
+                            <th scope="col">Website</th>
+                            <th scope="col">Notes</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for company in companies %}
+                            <tr>
+                                <td class="company-name">{{ company.company_name }}</td>
+                                <td>{{ company.industry or "—" }}</td>
+                                <td>
+                                    {% set location = [company.city, company.state] | reject("none") | join(", ") %}
+                                    {{ location or "—" }}
+                                </td>
+                                <td>
+                                    {% if company.website %}
+                                        <a href="{{ company.website if company.website.startswith('http://') or company.website.startswith('https://') else 'https://' ~ company.website }}" target="_blank" rel="noopener noreferrer">Visit</a>
+                                    {% else %}—{% endif %}
+                                </td>
+                                <td class="notes-cell">{{ company.notes or "—" }}</td>
+                                <td>
+                                    <div class="row-actions">
+                                        <a class="button button-small button-secondary"
+                                           href="{{ url_for('companies_detail', company_id=company.company_id) }}">View</a>
+                                        <a class="button button-small button-secondary"
+                                           href="{{ url_for('companies_edit', company_id=company.company_id) }}">Edit</a>
+                                        <form method="post"
+                                              action="{{ url_for('companies_delete', company_id=company.company_id) }}"
+                                              onsubmit="return confirm('Delete {{ company.company_name }}?');">
+                                            <button class="button button-small button-danger" type="submit">Delete</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="empty-state">No companies yet. Add one using the form.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
