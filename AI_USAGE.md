@@ -34,6 +34,7 @@
 - Asked to replace the page-shifting success message with a toast notification that disappears after about five seconds.
 - Shared a MySQL `Unknown column 'required_skills' in 'field list'` error when adding a job and asked for help resolving it.
 - Reported that the interview date/time control overflows the applications form and asked to fix it.
+- Asked to add skills to the sample jobs in `seed.sql` and provide a commit message.
 
 ## What Worked Well
 
@@ -43,6 +44,7 @@
 - Success notices now use a fixed toast overlay, so they don’t push page content down; error notices remain visible until dismissed.
 - The traceback confirmed the new job form expects the `required_skills` column, while the existing database still needs the provided migration.
 - The interview date/time control fits the form when its date fields use a full-width row and grid children can shrink within their columns.
+- Seeded sample jobs now include varied required-skill lists, allowing Job Match to produce different scores with sample data.
 
 ## What I Modified
 
@@ -53,6 +55,7 @@
 - The AI assistant diagnosed the missing-column error and recommended applying the existing schema migration. No application files were changed for this diagnosis.
 - The AI assistant changed the shared flash-message presentation to fixed toast notifications; no independent student modifications are confirmed.
 - The AI assistant adjusted the applications form layout and shared form-field sizing to prevent date/time input overflow; no student modifications are confirmed.
+- The AI assistant updated each sample job insert in `seed.sql` with required skills; no student modifications are confirmed.
 
 ## Lessons Learned
 
@@ -1065,3 +1068,33 @@
 
 **Lessons Learned:**
 - Native date/time controls have a minimum intrinsic width, so they may overflow a narrow grid column unless the layout allows them to shrink or stack.
+
+### 2026-11-17 — Add required skills to sample job data
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Populate seeded job records with required skills so the Job Match feature can rank sample jobs.
+
+**Key Prompt(s):**
+- "add skills to the sample data from seed.sql"
+- "and give me the commit message"
+
+**AI Contribution:**
+- Added varied, comma-separated required skills to all sample jobs inserted by `seed.sql`, including the Software Architect record.
+
+**Changes and Modifications:**
+- AI modified `seed.sql` and this log. No student modifications are confirmed.
+
+**Files Affected:**
+- `seed.sql` (modified).
+- `AI_USAGE.md` (updated).
+
+**Testing and Verification:**
+- Ran `git diff --check`; no whitespace errors were reported.
+- Did not execute `seed.sql` against MySQL.
+
+**What Worked Well:**
+- The seeded roles use varied skills, giving the matching page useful sample records to compare.
+
+**Lessons Learned:**
+- The seed script must be run against a schema that already includes `jobs.required_skills`.

@@ -16,15 +16,15 @@ VALUES
 ('Smart Tech Group', 'AI/ML', 'www.smarttech.com', 'Boston',
 'Massachusetts');
 
-INSERT INTO jobs (company_id, job_title, salary_min, salary_max,
-job_type, date_posted) VALUES
-(1, 'Software Developer', 70000, 90000, 'Full-time', '2025-01-15'),
-(1, 'Database Administrator', 75000, 95000, 'Full-time', '2025-01-10'),
-(2, 'Data Analyst', 65000, 85000, 'Full-time', '2025-01-12'),
-(3, 'Cloud Engineer', 80000, 100000, 'Full-time', '2025-01-08'),
-(4, 'Junior Developer', 55000, 70000, 'Full-time', '2025-01-14'),
-(4, 'Senior Developer', 95000, 120000, 'Full-time', '2025-01-14'),
-(5, 'ML Engineer', 90000, 115000, 'Full-time', '2025-01-11');
+INSERT INTO jobs (company_id, job_title, required_skills, salary_min,
+salary_max, job_type, date_posted) VALUES
+(1, 'Software Developer', 'Python, SQL, Flask, Git', 70000, 90000, 'Full-time', '2025-01-15'),
+(1, 'Database Administrator', 'SQL, MySQL, Linux, Database Design', 75000, 95000, 'Full-time', '2025-01-10'),
+(2, 'Data Analyst', 'SQL, Python, Excel, Tableau', 65000, 85000, 'Full-time', '2025-01-12'),
+(3, 'Cloud Engineer', 'AWS, Linux, Docker, Python, Networking', 80000, 100000, 'Full-time', '2025-01-08'),
+(4, 'Junior Developer', 'Python, JavaScript, Git, REST APIs', 55000, 70000, 'Full-time', '2025-01-14'),
+(4, 'Senior Developer', 'Python, Java, SQL, System Design', 95000, 120000, 'Full-time', '2025-01-14'),
+(5, 'ML Engineer', 'Python, Machine Learning, TensorFlow, SQL', 90000, 115000, 'Full-time', '2025-01-11');
 
 INSERT INTO applications (job_id, application_date, status,
 resume_version, cover_letter_sent) VALUES
@@ -47,18 +47,18 @@ UPDATE applications
 SET status = 'Interview'
 WHERE application_id = 3;
 
-INSERT INTO jobs (company_id, job_title, salary_min, salary_max,
-job_type, date_posted) VALUES
-(1, 'QA Engineer', 60000, 80000, 'Full-time', '2025-01-05'),
-(2, 'Business Analyst', 65000, 85000, 'Full-time', '2025-01-06'),
-(2, 'Data Scientist', 85000, 110000, 'Full-time', '2025-01-07'),
-(3, 'DevOps Engineer', 80000, 105000, 'Full-time', '2025-01-08'),
-(3, 'Security Analyst', 75000, 95000, 'Full-time', '2025-01-09'),
-(4, 'UI/UX Designer', 60000, 80000, 'Full-time', '2025-01-10'),
-(5, 'Product Manager', 90000, 120000, 'Full-time', '2025-01-11'),
-(1, 'Technical Writer', 55000, 75000, 'Contract', '2025-01-12'),
-(2, 'Intern - Data', 30000, 40000, 'Internship', '2025-01-13'),
-(4, 'Intern - Development', 32000, 42000, 'Internship', '2025-01-14');
+INSERT INTO jobs (company_id, job_title, required_skills, salary_min,
+salary_max, job_type, date_posted) VALUES
+(1, 'QA Engineer', 'Python, Selenium, API Testing, Git', 60000, 80000, 'Full-time', '2025-01-05'),
+(2, 'Business Analyst', 'SQL, Excel, Tableau, Requirements Analysis', 65000, 85000, 'Full-time', '2025-01-06'),
+(2, 'Data Scientist', 'Python, SQL, Machine Learning, Statistics', 85000, 110000, 'Full-time', '2025-01-07'),
+(3, 'DevOps Engineer', 'Linux, Docker, Kubernetes, AWS, CI/CD', 80000, 105000, 'Full-time', '2025-01-08'),
+(3, 'Security Analyst', 'Linux, Network Security, Python, SIEM', 75000, 95000, 'Full-time', '2025-01-09'),
+(4, 'UI/UX Designer', 'Figma, Wireframing, Prototyping, User Research', 60000, 80000, 'Full-time', '2025-01-10'),
+(5, 'Product Manager', 'Agile, Communication, Roadmapping, SQL', 90000, 120000, 'Full-time', '2025-01-11'),
+(1, 'Technical Writer', 'Technical Writing, Markdown, API Documentation, Git', 55000, 75000, 'Contract', '2025-01-12'),
+(2, 'Intern - Data', 'Python, SQL, Excel, Statistics', 30000, 40000, 'Internship', '2025-01-13'),
+(4, 'Intern - Development', 'Python, JavaScript, Git, HTML/CSS', 32000, 42000, 'Internship', '2025-01-14');
 
 UPDATE applications
 SET status = 'Interview'
@@ -67,12 +67,13 @@ WHERE application_id = 2;
 INSERT INTO companies (company_name, industry, city, state)
 VALUES ('New Tech Corp', 'Technology', 'Denver', 'Colorado');
 
-INSERT INTO jobs (company_id, job_title, salary_min, salary_max,
-job_type)
+INSERT INTO jobs (company_id, job_title, required_skills, salary_min,
+salary_max, job_type)
 VALUES (
     (SELECT company_id FROM companies
      WHERE company_name = 'New Tech Corp'),
-    'Software Architect', 120000, 150000, 'Full-time'
+    'Software Architect', 'Python, Java, System Design, AWS, Microservices',
+    120000, 150000, 'Full-time'
 );
 
 INSERT INTO applications (job_id, application_date, status,
