@@ -19,7 +19,7 @@ A Flask and MySQL application for organizing companies, job listings, contacts, 
 ### 1. Clone the repository and enter the project directory
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/jocsp/job-application-tracker.git
 cd job-application-tracker
 ```
 
