@@ -1,54 +1,72 @@
--- Database creation script for the Job Application Tracker.
-CREATE DATABASE IF NOT EXISTS job_tracker
-    CHARACTER SET utf8mb4;
+CREATE DATABASE IF NOT EXISTS job_tracker;
 
 USE job_tracker;
 
 CREATE TABLE companies (
-    company_id INT PRIMARY KEY AUTO_INCREMENT,
+    company_id INT AUTO_INCREMENT PRIMARY KEY,
     company_name VARCHAR(100) NOT NULL,
     industry VARCHAR(50),
     website VARCHAR(200),
     city VARCHAR(50),
     state VARCHAR(50),
-    notes TEXT
-) ENGINE=InnoDB;
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE TABLE jobs (
-    job_id INT PRIMARY KEY AUTO_INCREMENT,
-    company_id INT,
+    job_id INT AUTO_INCREMENT PRIMARY KEY,
+    company_id INT NOT NULL,
     job_title VARCHAR(100) NOT NULL,
-    job_type ENUM('Full-time', 'Part-time', 'Contract', 'Internship'),
-    salary_min INT,
-    salary_max INT,
-    job_url VARCHAR(300),
+    job_description TEXT,
+    salary_min DECIMAL(10,2),
+    salary_max DECIMAL(10,2),
+    job_type VARCHAR(20),
+    posting_url VARCHAR(500),
     date_posted DATE,
-    requirements JSON,
-    CONSTRAINT fk_jobs_company
-        FOREIGN KEY (company_id) REFERENCES companies(company_id)
-) ENGINE=InnoDB;
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (company_id)
+        REFERENCES companies(company_id)
+);
 
 CREATE TABLE applications (
-    application_id INT PRIMARY KEY AUTO_INCREMENT,
-    job_id INT,
+    application_id INT AUTO_INCREMENT PRIMARY KEY,
+    job_id INT NOT NULL,
     application_date DATE NOT NULL,
-    status ENUM('Applied', 'Screening', 'Interview', 'Offer', 'Rejected', 'Withdrawn'),
+    status VARCHAR(30) DEFAULT 'Applied',
     resume_version VARCHAR(50),
-    cover_letter_sent BOOLEAN,
-    interview_data JSON,
-    CONSTRAINT fk_applications_job
-        FOREIGN KEY (job_id) REFERENCES jobs(job_id)
-) ENGINE=InnoDB;
+    cover_letter_sent BOOLEAN DEFAULT FALSE,
+    response_date DATE,
+    interview_date DATETIME,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (job_id)
+        REFERENCES jobs(job_id)
+);
 
 CREATE TABLE contacts (
-    contact_id INT PRIMARY KEY AUTO_INCREMENT,
-    company_id INT,
-    contact_name VARCHAR(100) NOT NULL,
-    title VARCHAR(100),
+    contact_id INT AUTO_INCREMENT PRIMARY KEY,
+    company_id INT NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
     email VARCHAR(100),
     phone VARCHAR(20),
+    job_title VARCHAR(100),
     linkedin_url VARCHAR(200),
     notes TEXT,
-    CONSTRAINT fk_contacts_company
-        FOREIGN KEY (company_id) REFERENCES companies(company_id)
-) ENGINE=InnoDB;
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (company_id)
+        REFERENCES companies(company_id)
+);
+
+CREATE INDEX idx_job_title
+ON jobs(job_title);
+
+CREATE INDEX idx_company_type
+ON jobs(company_id, job_type);
+
+CREATE INDEX idx_app_status
+ON applications(status);
+
+CREATE INDEX idx_company_industry
+ON companies(industry);

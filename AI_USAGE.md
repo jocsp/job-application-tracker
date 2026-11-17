@@ -23,6 +23,10 @@
 - Asked to fix `seed.sql` so it matches the database schema and provide a commit message.
 - Asked to create the initial `app.py`, test the database connection with the provided environment variables, and suggest a commit message.
 - Asked to implement company CRUD operations in the Flask project and provide commit messages.
+- Asked whether a proposed alternate schema is the same as or has a similar outcome to `schema.sql`.
+- Asked to add the fields from the alternate schema to `schema.sql`.
+- Asked whether the updated `schema.sql` now exactly matches the provided alternate schema.
+- Asked to make `schema.sql` match the newly supplied schema exactly.
 
 ## What Worked Well
 
@@ -589,6 +593,127 @@
 
 **What Worked Well:**
 - The routes match the existing table fields and accommodate its extra nullable `created_at` column.
+
+**Lessons Learned:**
+- Pending student reflection.
+
+### 2026-11-17 — Compare an alternate schema with `schema.sql`
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Explain structural similarities and differences between the user's proposed MySQL schema and the repository schema.
+
+**Key Prompt(s):**
+- Asked whether the provided schema has the same or a similar outcome as the current `schema.sql`.
+
+**AI Contribution:**
+- Compared the four tables' columns, types, nullability, defaults, constraints, JSON fields, timestamps, and indexes.
+- Noted that the repository's database schema and the live companies table differ by at least the `created_at` column.
+
+**Changes and Modifications:**
+- No application or SQL files were changed. This usage log was updated.
+
+**Files Affected:**
+- `schema.sql` and `AI_USAGE.md` (reviewed; log updated).
+
+**Testing and Verification:**
+- Read `schema.sql` and compared it with the schema supplied in the prompt.
+- No database changes or tests were run.
+
+**What Worked Well:**
+- A side-by-side comparison identifies which design choices affect compatibility and stored data.
+
+**Lessons Learned:**
+- Pending student reflection.
+
+### 2026-11-17 — Add the alternate schema's fields
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Extend the repository schema with fields from the user's alternate schema while retaining existing columns.
+
+**Key Prompt(s):**
+- "modify the schema.sql to add these new fields"
+
+**AI Contribution:**
+- Added timestamps to all four tables; job description, posting URL, active flag; application response/interview dates and notes; and contact first name, last name, and job title.
+- Added the four indexes from the alternate schema.
+- Updated seed contact inserts to supply the newly required first and last name fields.
+
+**Changes and Modifications:**
+- AI modified `schema.sql`, `seed.sql`, and this log. Existing columns and their types were retained, so some concepts now have parallel fields (for example, `job_url` and `posting_url`). No student modifications are confirmed.
+
+**Files Affected:**
+- `schema.sql` (modified).
+- `seed.sql` (modified for required contact fields).
+- `AI_USAGE.md` (reviewed and updated).
+
+**Testing and Verification:**
+- Reviewed the SQL diff and ran `git diff --check` with no whitespace errors.
+- Did not run the schema against MySQL because the database already exists and the script uses `CREATE TABLE` statements rather than `ALTER TABLE` migrations.
+
+**What Worked Well:**
+- The seed contact inserts now provide values for the new required name columns.
+
+**Lessons Learned:**
+- Before implementing jobs and contacts CRUD, choose which of the parallel URL, title, and name fields the application will use.
+
+### 2026-11-17 — Confirm schema alignment
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Check whether the expanded project schema exactly matches the user's supplied schema.
+
+**Key Prompt(s):**
+- Asked whether the modified `schema.sql` now matches the supplied version.
+
+**AI Contribution:**
+- Compared the current SQL definitions for nullability, data types, defaults, and extra columns.
+- Clarified that the schema is not an exact match and identified the remaining differences.
+
+**Changes and Modifications:**
+- No schema changes were made. This usage log was updated.
+
+**Files Affected:**
+- `schema.sql` and `AI_USAGE.md` (reviewed; log updated).
+
+**Testing and Verification:**
+- Read `schema.sql` and compared it with the schema in the prompt. No database operation or tests were run.
+
+**What Worked Well:**
+- The comparison identified incompatible constraints and duplicate columns that should be resolved before implementing related CRUD features.
+
+**Lessons Learned:**
+- Pending student reflection.
+
+### 2026-11-17 — Make `schema.sql` match the supplied schema
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Replace the project's schema definitions with the exact table columns, constraints, defaults, and indexes in the user's supplied schema.
+
+**Key Prompt(s):**
+- "make schema.sql match the new schema i'm passing to you"
+
+**AI Contribution:**
+- Replaced `schema.sql` definitions to match the supplied four-table schema, including nullability, decimal salary types, string status/job types, defaults, timestamps, and indexes.
+- Updated contact inserts in `seed.sql` to use the new first/last name and job-title columns.
+
+**Changes and Modifications:**
+- AI modified `schema.sql`, `seed.sql`, and this log. No student modifications are confirmed.
+- The existing MySQL database was not altered.
+
+**Files Affected:**
+- `schema.sql` (replaced with requested schema).
+- `seed.sql` (updated to match contact columns).
+- `AI_USAGE.md` (reviewed and updated).
+
+**Testing and Verification:**
+- Reviewed the SQL changes and ran `git diff --check`.
+- Did not execute the schema or seed script; the user has an existing database and this setup script uses `CREATE TABLE` statements.
+
+**What Worked Well:**
+- The schema and seed contact inserts now use the same field names.
 
 **Lessons Learned:**
 - Pending student reflection.
