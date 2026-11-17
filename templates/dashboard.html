@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Job Application Tracker{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Your job search</p>
+        <h1>Dashboard</h1>
+        <p>A quick view of your saved opportunities and application activity.</p>
+    </div>
+    <a class="button button-primary" href="{{ url_for('job_match') }}">Find your best matches</a>
+</section>
+
+<section class="stat-grid" aria-label="Job search totals">
+    <a class="stat-card" href="{{ url_for('companies_list') }}">
+        <span>Companies</span><strong>{{ summary.company_count }}</strong>
+    </a>
+    <a class="stat-card" href="{{ url_for('jobs_list') }}">
+        <span>All jobs</span><strong>{{ summary.job_count }}</strong>
+    </a>
+    <a class="stat-card" href="{{ url_for('jobs_list') }}">
+        <span>Active jobs</span><strong>{{ summary.active_job_count }}</strong>
+    </a>
+    <a class="stat-card" href="{{ url_for('applications_list') }}">
+        <span>Applications</span><strong>{{ summary.application_count }}</strong>
+    </a>
+    <a class="stat-card" href="{{ url_for('contacts_list') }}">
+        <span>Contacts</span><strong>{{ summary.contact_count }}</strong>
+    </a>
+</section>
+
+<div class="dashboard-grid">
+    <section class="panel">
+        <div class="panel-heading">
+            <div><h2>Recent applications</h2><p>Your latest application activity</p></div>
+            <a href="{{ url_for('applications_list') }}">View all</a>
+        </div>
+        {% if recent_applications %}
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th scope="col">Date</th><th scope="col">Position</th><th scope="col">Company</th><th scope="col">Status</th></tr></thead>
+                    <tbody>
+                        {% for application in recent_applications %}
+                            <tr>
+                                <td>{{ application.application_date }}</td>
+                                <td><a href="{{ url_for('applications_detail', application_id=application.application_id) }}">{{ application.job_title }}</a></td>
+                                <td>{{ application.company_name }}</td>
+                                <td><span class="status-pill status-neutral">{{ application.status or "Applied" }}</span></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="empty-state">No applications yet. Add an application to see it here.</p>
+        {% endif %}
+    </section>
+
+    <section class="panel">
+        <div class="panel-heading"><div><h2>Application status</h2><p>How your applications are progressing</p></div></div>
+        {% if status_counts %}
+            <ul class="status-list">
+                {% for item in status_counts %}
+                    <li><span class="status-pill status-neutral">{{ item.status or "Applied" }}</span><strong>{{ item.total }}</strong></li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-state">Status totals will appear after you add applications.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

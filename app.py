@@ -1,10 +1,12 @@
 """Initial Flask application for the Job Application Tracker."""
 
 import os
+import re
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
+from urllib.parse import urlsplit
 
-from flask import Flask, abort, flash, jsonify, redirect, render_template, request, url_for
+from flask import Flask, abort, flash, jsonify, redirect, render_template, request, session, url_for
 from mysql.connector.errors import IntegrityError
 
 from database import execute_query, fetch_all, fetch_one, insert_query
@@ -16,13 +18,119 @@ app.config["SECRET_KEY"] = os.getenv(
 )
 
 
+def _is_valid_http_url(value):
+    """Accept an HTTP(S) URL with or without an explicit scheme."""
+    if not value:
+        return True
+    if any(character.isspace() for character in value):
+        return False
+    candidate = value if "://" in value else f"https://{value}"
+    try:
+        parsed = urlsplit(candidate)
+        # Accessing .port also checks that any supplied port is numeric and valid.
+        parsed.port
+    except ValueError:
+        return False
+    return parsed.scheme in {"http", "https"} and bool(parsed.hostname)
+
+
 @app.get("/")
 def home():
-    """Return a basic response while the application is being built."""
-    return jsonify({
-        "application": "Job Application Tracker",
-        "status": "running",
-    })
+    """Show an overview of the job search and recent application activity."""
+    summary = fetch_one(
+        """SELECT
+               (SELECT COUNT(*) FROM companies) AS company_count,
+               (SELECT COUNT(*) FROM jobs) AS job_count,
+               (SELECT COUNT(*) FROM jobs WHERE is_active = TRUE) AS active_job_count,
+               (SELECT COUNT(*) FROM contacts) AS contact_count,
+               (SELECT COUNT(*) FROM applications) AS application_count"""
+    )
+    recent_applications = fetch_all(
+        """SELECT a.application_id, a.application_date, a.status,
+                  j.job_title, c.company_name
+           FROM applications AS a
+           JOIN jobs AS j ON j.job_id = a.job_id
+           JOIN companies AS c ON c.company_id = j.company_id
+           ORDER BY a.application_date DESC, a.application_id DESC
+           LIMIT 6"""
+    )
+    status_counts = fetch_all(
+        """SELECT COALESCE(status, 'Applied') AS status, COUNT(*) AS total
+           FROM applications
+           GROUP BY status
+           ORDER BY total DESC, status"""
+    )
+    return render_template(
+        "dashboard.html",
+        summary=summary,
+        recent_applications=recent_applications,
+        status_counts=status_counts,
+    )
+
+
+def _parse_skill_list(value):
+    """Split comma/newline-separated skills and remove duplicates, case-insensitively."""
+    if not value:
+        return []
+    skills = []
+    seen = set()
+    for item in re.split(r"[,\n]+", value):
+        skill = re.sub(r"\s+", " ", item).strip()
+        normalized = skill.casefold()
+        if skill and normalized not in seen:
+            seen.add(normalized)
+            skills.append(skill)
+    return skills
+
+
+@app.route("/job-match", methods=["GET", "POST"])
+def job_match():
+    """Rank active jobs by the percentage of required skills the user has."""
+    if request.method == "POST":
+        raw_skills = request.form.get("user_skills", "").strip()
+        if len(raw_skills) > 2000:
+            flash("Keep your skills list under 2,000 characters.", "error")
+        else:
+            session["user_skills"] = raw_skills
+
+    raw_skills = session.get("user_skills", "")
+    user_skills = _parse_skill_list(raw_skills)
+    normalized_user_skills = {skill.casefold() for skill in user_skills}
+    jobs = fetch_all(
+        """SELECT j.job_id, j.job_title, j.job_type, j.salary_min, j.salary_max,
+                  j.date_posted, j.posting_url, j.required_skills,
+                  c.company_name
+           FROM jobs AS j
+           JOIN companies AS c ON c.company_id = j.company_id
+           WHERE j.is_active = TRUE"""
+    )
+
+    for job in jobs:
+        required_skills = _parse_skill_list(job.get("required_skills") or "")
+        matches = [
+            skill for skill in required_skills
+            if skill.casefold() in normalized_user_skills
+        ]
+        job["required_skill_list"] = required_skills
+        job["matched_skills"] = matches
+        job["match_percent"] = (
+            round(len(matches) * 100 / len(required_skills), 1)
+            if required_skills else None
+        )
+
+    jobs.sort(
+        key=lambda job: (
+            job["match_percent"] is None,
+            -(job["match_percent"] or 0),
+            job["job_title"].casefold(),
+        )
+    )
+    return render_template(
+        "job_match.html",
+        jobs=jobs,
+        raw_skills=raw_skills,
+        user_skills=user_skills,
+    )
 
 
 @app.get("/health/database")
@@ -66,6 +174,8 @@ def _company_form_data():
         value = data[field]
         if value and len(value) > limit:
             errors.append(f"{field.replace('_', ' ').capitalize()} must be {limit} characters or fewer.")
+    if data["website"] and not _is_valid_http_url(data["website"]):
+        errors.append("Website must be a valid HTTP or HTTPS URL.")
 
     return data, errors
 
@@ -105,13 +215,20 @@ def companies_create():
     if errors:
         return _render_companies(form_values=data, form_errors=errors, status=400)
 
-    insert_query(
-        """INSERT INTO companies
-           (company_name, industry, website, city, state, notes)
-           VALUES (%s, %s, %s, %s, %s, %s)""",
-        (data["company_name"], data["industry"], data["website"],
-         data["city"], data["state"], data["notes"]),
-    )
+    try:
+        insert_query(
+            """INSERT INTO companies
+               (company_name, industry, website, city, state, notes)
+               VALUES (%s, %s, %s, %s, %s, %s)""",
+            (data["company_name"], data["industry"], data["website"],
+             data["city"], data["state"], data["notes"]),
+        )
+    except IntegrityError:
+        return _render_companies(
+            form_values=data,
+            form_errors=["The company could not be saved because a database constraint was violated."],
+            status=400,
+        )
     flash("Company added.", "success")
     return redirect(url_for("companies_list"))
 
@@ -134,14 +251,22 @@ def companies_edit(company_id):
             edit_company=company, form_values=data, form_errors=errors, status=400
         )
 
-    execute_query(
-        """UPDATE companies
-           SET company_name = %s, industry = %s, website = %s,
-               city = %s, state = %s, notes = %s
-           WHERE company_id = %s""",
-        (data["company_name"], data["industry"], data["website"],
-         data["city"], data["state"], data["notes"], company_id),
-    )
+    try:
+        execute_query(
+            """UPDATE companies
+               SET company_name = %s, industry = %s, website = %s,
+                   city = %s, state = %s, notes = %s
+               WHERE company_id = %s""",
+            (data["company_name"], data["industry"], data["website"],
+             data["city"], data["state"], data["notes"], company_id),
+        )
+    except IntegrityError:
+        return _render_companies(
+            edit_company=company,
+            form_values=data,
+            form_errors=["The company could not be updated because a database constraint was violated."],
+            status=400,
+        )
     flash("Company updated.", "success")
     return redirect(url_for("companies_list"))
 
@@ -175,6 +300,7 @@ def _job_form_data():
         "company_id": None,
         "job_title": request.form.get("job_title", "").strip(),
         "job_description": request.form.get("job_description", "").strip() or None,
+        "required_skills": request.form.get("required_skills", "").strip() or None,
         "salary_min": None,
         "salary_max": None,
         "job_type": job_type,
@@ -198,11 +324,15 @@ def _job_form_data():
         errors.append("Job title is required.")
     elif len(data["job_title"]) > 100:
         errors.append("Job title must be 100 characters or fewer.")
+    if data["required_skills"] and len(data["required_skills"]) > 5000:
+        errors.append("Required skills must be 5,000 characters or fewer.")
 
     if job_type and len(job_type) > 20:
         errors.append("Job type must be 20 characters or fewer.")
     if posting_url and len(posting_url) > 500:
         errors.append("Posting URL must be 500 characters or fewer.")
+    if posting_url and not _is_valid_http_url(posting_url):
+        errors.append("Posting URL must be a valid HTTP or HTTPS URL.")
 
     max_salary = Decimal("99999999.99")
     for field, label in (("salary_min", "Minimum salary"), ("salary_max", "Maximum salary")):
@@ -268,15 +398,23 @@ def jobs_create():
     if errors:
         return _render_jobs(form_values=data, form_errors=errors, status=400)
 
-    insert_query(
-        """INSERT INTO jobs
-           (company_id, job_title, job_description, salary_min, salary_max,
-            job_type, posting_url, date_posted, is_active)
-           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-        (data["company_id"], data["job_title"], data["job_description"],
-         data["salary_min"], data["salary_max"], data["job_type"],
-         data["posting_url"], data["date_posted"], data["is_active"]),
-    )
+    try:
+        insert_query(
+            """INSERT INTO jobs
+               (company_id, job_title, job_description, required_skills,
+                salary_min, salary_max, job_type, posting_url, date_posted, is_active)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            (data["company_id"], data["job_title"], data["job_description"],
+             data["required_skills"],
+             data["salary_min"], data["salary_max"], data["job_type"],
+             data["posting_url"], data["date_posted"], data["is_active"]),
+        )
+    except IntegrityError:
+        return _render_jobs(
+            form_values=data,
+            form_errors=["The selected company is no longer available. Choose a company and try again."],
+            status=400,
+        )
     flash("Job added.", "success")
     return redirect(url_for("jobs_list"))
 
@@ -312,16 +450,26 @@ def jobs_edit(job_id):
             edit_job=job, form_values=data, form_errors=errors, status=400
         )
 
-    execute_query(
-        """UPDATE jobs
-           SET company_id = %s, job_title = %s, job_description = %s,
-               salary_min = %s, salary_max = %s, job_type = %s,
-               posting_url = %s, date_posted = %s, is_active = %s
-           WHERE job_id = %s""",
-        (data["company_id"], data["job_title"], data["job_description"],
-         data["salary_min"], data["salary_max"], data["job_type"],
-         data["posting_url"], data["date_posted"], data["is_active"], job_id),
-    )
+    try:
+        execute_query(
+            """UPDATE jobs
+               SET company_id = %s, job_title = %s, job_description = %s,
+                   required_skills = %s,
+                   salary_min = %s, salary_max = %s, job_type = %s,
+                   posting_url = %s, date_posted = %s, is_active = %s
+               WHERE job_id = %s""",
+            (data["company_id"], data["job_title"], data["job_description"],
+             data["required_skills"],
+             data["salary_min"], data["salary_max"], data["job_type"],
+             data["posting_url"], data["date_posted"], data["is_active"], job_id),
+        )
+    except IntegrityError:
+        return _render_jobs(
+            edit_job=job,
+            form_values=data,
+            form_errors=["The selected company is no longer available. Choose a company and try again."],
+            status=400,
+        )
     flash("Job updated.", "success")
     return redirect(url_for("jobs_list"))
 
@@ -384,6 +532,10 @@ def _contact_form_data():
         errors.append("Job title must be 100 characters or fewer.")
     if data["linkedin_url"] and len(data["linkedin_url"]) > 200:
         errors.append("LinkedIn URL must be 200 characters or fewer.")
+    if data["email"] and not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", data["email"]):
+        errors.append("Enter a valid email address.")
+    if data["linkedin_url"] and not _is_valid_http_url(data["linkedin_url"]):
+        errors.append("LinkedIn URL must be a valid HTTP or HTTPS URL.")
 
     return data, errors
 
@@ -423,15 +575,22 @@ def contacts_create():
     if errors:
         return _render_contacts(form_values=data, form_errors=errors, status=400)
 
-    insert_query(
-        """INSERT INTO contacts
-           (company_id, first_name, last_name, email, phone, job_title,
-            linkedin_url, notes)
-           VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
-        (data["company_id"], data["first_name"], data["last_name"],
-         data["email"], data["phone"], data["job_title"],
-         data["linkedin_url"], data["notes"]),
-    )
+    try:
+        insert_query(
+            """INSERT INTO contacts
+               (company_id, first_name, last_name, email, phone, job_title,
+                linkedin_url, notes)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+            (data["company_id"], data["first_name"], data["last_name"],
+             data["email"], data["phone"], data["job_title"],
+             data["linkedin_url"], data["notes"]),
+        )
+    except IntegrityError:
+        return _render_contacts(
+            form_values=data,
+            form_errors=["The selected company is no longer available. Choose a company and try again."],
+            status=400,
+        )
     flash("Contact added.", "success")
     return redirect(url_for("contacts_list"))
 
@@ -469,16 +628,24 @@ def contacts_edit(contact_id):
             edit_contact=contact, form_values=data, form_errors=errors, status=400
         )
 
-    execute_query(
-        """UPDATE contacts
-           SET company_id = %s, first_name = %s, last_name = %s,
-               email = %s, phone = %s, job_title = %s,
-               linkedin_url = %s, notes = %s
-           WHERE contact_id = %s""",
-        (data["company_id"], data["first_name"], data["last_name"],
-         data["email"], data["phone"], data["job_title"],
-         data["linkedin_url"], data["notes"], contact_id),
-    )
+    try:
+        execute_query(
+            """UPDATE contacts
+               SET company_id = %s, first_name = %s, last_name = %s,
+                   email = %s, phone = %s, job_title = %s,
+                   linkedin_url = %s, notes = %s
+               WHERE contact_id = %s""",
+            (data["company_id"], data["first_name"], data["last_name"],
+             data["email"], data["phone"], data["job_title"],
+             data["linkedin_url"], data["notes"], contact_id),
+        )
+    except IntegrityError:
+        return _render_contacts(
+            edit_contact=contact,
+            form_values=data,
+            form_errors=["The selected company is no longer available. Choose a company and try again."],
+            status=400,
+        )
     flash("Contact updated.", "success")
     return redirect(url_for("contacts_list"))
 
@@ -597,15 +764,22 @@ def applications_create():
             form_values=data, form_errors=errors, status=400
         )
 
-    insert_query(
-        """INSERT INTO applications
-           (job_id, application_date, status, resume_version,
-            cover_letter_sent, response_date, interview_date, notes)
-           VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
-        (data["job_id"], data["application_date"], data["status"],
-         data["resume_version"], data["cover_letter_sent"],
-         data["response_date"], data["interview_date"], data["notes"]),
-    )
+    try:
+        insert_query(
+            """INSERT INTO applications
+               (job_id, application_date, status, resume_version,
+                cover_letter_sent, response_date, interview_date, notes)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+            (data["job_id"], data["application_date"], data["status"],
+             data["resume_version"], data["cover_letter_sent"],
+             data["response_date"], data["interview_date"], data["notes"]),
+        )
+    except IntegrityError:
+        return _render_applications(
+            form_values=data,
+            form_errors=["The selected job is no longer available. Choose a job and try again."],
+            status=400,
+        )
     flash("Application added.", "success")
     return redirect(url_for("applications_list"))
 
@@ -648,17 +822,25 @@ def applications_edit(application_id):
             status=400,
         )
 
-    execute_query(
-        """UPDATE applications
-           SET job_id = %s, application_date = %s, status = %s,
-               resume_version = %s, cover_letter_sent = %s,
-               response_date = %s, interview_date = %s, notes = %s
-           WHERE application_id = %s""",
-        (data["job_id"], data["application_date"], data["status"],
-         data["resume_version"], data["cover_letter_sent"],
-         data["response_date"], data["interview_date"], data["notes"],
-         application_id),
-    )
+    try:
+        execute_query(
+            """UPDATE applications
+               SET job_id = %s, application_date = %s, status = %s,
+                   resume_version = %s, cover_letter_sent = %s,
+                   response_date = %s, interview_date = %s, notes = %s
+               WHERE application_id = %s""",
+            (data["job_id"], data["application_date"], data["status"],
+             data["resume_version"], data["cover_letter_sent"],
+             data["response_date"], data["interview_date"], data["notes"],
+             application_id),
+        )
+    except IntegrityError:
+        return _render_applications(
+            edit_application=application,
+            form_values=data,
+            form_errors=["The selected job is no longer available. Choose a job and try again."],
+            status=400,
+        )
     flash("Application updated.", "success")
     return redirect(url_for("applications_list"))
 

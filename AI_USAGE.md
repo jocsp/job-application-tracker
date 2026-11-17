@@ -29,15 +29,18 @@
 - Asked to add the fields from the alternate schema to `schema.sql`.
 - Asked whether the updated `schema.sql` now exactly matches the provided alternate schema.
 - Asked to make `schema.sql` match the newly supplied schema exactly.
+- Asked to add a dashboard and a job matching feature that ranks jobs by the percentage of required skills matching the user's skills, and requested a commit message.
 
 ## What Worked Well
 
 - Repository inspection identified two untracked documentation files and no tracked changes, supporting a documentation-focused commit message.
+- The dashboard can summarize existing application data, and the matching feature uses explicitly entered skill lists so it can calculate transparent exact-skill percentages.
 
 ## What I Modified
 
 - The AI assistant populated the previously empty `AI_USAGE.md`. Independent student modifications have not been documented or confirmed.
 - The AI assistant created `schema.sql` from the user-provided schema; no independent student edits to that output are confirmed.
+- The AI assistant added a nullable `required_skills` field and an upgrade script because the existing jobs schema did not store the skill list needed for matching. The user's skill list is held in the Flask session; no independent student modifications to this work are confirmed.
 
 ## Lessons Learned
 
@@ -77,7 +80,6 @@
 
 **Lessons Learned:**
 - Pending student reflection.
-
 ### 2026-11-17 — Implement company CRUD pages and routes
 
 **AI Tool:** Codex (GPT-6 Thinking)
@@ -114,7 +116,6 @@
 
 **Lessons Learned:**
 - Pending student reflection.
-
 ### 2026-11-17 — Create initial Flask app and verify database connection
 
 **AI Tool:** Codex (GPT-6 Thinking)
@@ -863,3 +864,68 @@
 
 **Lessons Learned:**
 - Pending student reflection.
+
+### 2026-11-17 — Review CRUD forms and strengthen validation
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Ensure the CRUD pages provide listing, adding, editing, and deleting flows for each table, with server-side validation and clear foreign-key error handling.
+
+**Key Prompt(s):**
+- "please build the templates and forms for listing, adding, editing, and deleting records, also add input validation and handle foreign key errors such as trying to delete a company that still has jobs or contacts."
+
+**AI Contribution:**
+- Reviewed the existing list, detail, add, edit, and delete flows for companies, jobs, contacts, and applications.
+- Added server-side URL validation for company websites, job postings, and LinkedIn profiles, plus basic email format validation for contacts.
+- Added friendly handling for database constraint errors during create/update operations when a related company or job is removed before the form is saved. Existing delete handlers already report when a company has jobs or contacts, or a job has applications.
+
+**Changes and Modifications:**
+- AI modified `app.py` and this log. The CRUD templates and forms were already present from the earlier table-specific CRUD work and were reviewed without modification. No student modifications are confirmed.
+
+**Files Affected:**
+- `app.py` (modified).
+- `AI_USAGE.md` (updated).
+- Existing CRUD templates (reviewed; unchanged).
+
+**Testing and Verification:**
+- Ran `git diff --check`; no whitespace errors were reported.
+- Did not run the Flask application or exercise CRUD operations against MySQL.
+
+**What Worked Well:**
+- Validation runs on the server as well as in the browser, and foreign-key failures return a useful message instead of an unhandled database error.
+
+**Lessons Learned:**
+- Pending student reflection.
+
+### 2026-11-17 — Add dashboard and job skill matching
+
+**AI Tool:** Codex (GPT-6 Thinking)
+
+**Purpose:** Add a dashboard summarizing job search activity and a page that ranks active jobs by the percentage of required skills matching the user's skills.
+
+**Key Prompt(s):**
+- "Add the dashboard and the job match feature, which should rank jobs by the percentage of required skills that match the user’s skills."
+- "and give me the commit message."
+
+**AI Contribution:**
+- Replaced the root JSON placeholder with a dashboard showing record totals, recent applications, and application status counts.
+- Added required skills to the job create/edit form and detail view. Added a Job Match page that compares comma/newline-separated user and job skill lists case-insensitively, removes duplicates, calculates matched-required percentages, and ranks active jobs.
+- Added the `required_skills` column to the fresh-install schema and provided a one-time migration for existing databases.
+
+**Changes and Modifications:**
+- AI modified `app.py`, `schema.sql`, `README.md`, `templates/base.html`, `templates/jobs.html`, `templates/job_detail.html`, and `static/style.css`; created `templates/dashboard.html`, `templates/job_match.html`, and `migration_add_required_skills.sql`; updated this log. No student modifications are confirmed.
+
+**Files Affected:**
+- `app.py`, `schema.sql`, `README.md`, `templates/base.html`, `templates/jobs.html`, `templates/job_detail.html`, and `static/style.css` (modified).
+- `templates/dashboard.html`, `templates/job_match.html`, and `migration_add_required_skills.sql` (created).
+- `AI_USAGE.md` (updated).
+
+**Testing and Verification:**
+- Ran `git diff --check`; no whitespace errors were reported.
+- Did not run the Flask app, apply the database migration, or exercise the dashboard or matching page against MySQL.
+
+**What Worked Well:**
+- The match percentage has a clear denominator: the job's listed required skills. Jobs without skill data remain visible but are shown as unscored.
+
+**Lessons Learned:**
+- Existing databases need the included one-time migration before using the new required-skills field; pending student reflection on the feature implementation.

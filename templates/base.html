@@ -10,8 +10,10 @@
     <header class="site-header">
         <a class="brand" href="{{ url_for('home') }}">Job Application Tracker</a>
         <nav aria-label="Main navigation">
+            <a href="{{ url_for('home') }}">Dashboard</a>
             <a href="{{ url_for('companies_list') }}">Companies</a>
             <a href="{{ url_for('jobs_list') }}">Jobs</a>
+            <a href="{{ url_for('job_match') }}">Job Match</a>
             <a href="{{ url_for('contacts_list') }}">Contacts</a>
             <a href="{{ url_for('applications_list') }}">Applications</a>
         </nav>

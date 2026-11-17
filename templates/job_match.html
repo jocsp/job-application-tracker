@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Job Match | Job Application Tracker{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Skill comparison</p>
+        <h1>Job Match</h1>
+        <p>Rank active jobs by the percentage of their required skills that match your skills.</p>
+    </div>
+</section>
+
+<section class="panel skill-entry-panel">
+    <form method="post" action="{{ url_for('job_match') }}">
+        <label for="user_skills">Your skills</label>
+        <textarea id="user_skills" name="user_skills" rows="4" maxlength="2000"
+                  placeholder="Python, SQL, Flask, data analysis">{{ raw_skills }}</textarea>
+        <div class="skill-form-footer">
+            <p class="field-help">Separate skills with commas or put one skill on each line. Matching ignores capitalization and duplicate entries.</p>
+            <button class="button button-primary" type="submit">Update matches</button>
+        </div>
+    </form>
+</section>
+
+{% if not user_skills %}
+    <p class="info-banner">Enter your skills above to see which active jobs fit best.</p>
+{% endif %}
+
+<section class="match-results">
+    <div class="panel-heading">
+        <div><h2>Ranked active jobs</h2><p>{{ jobs|length }} active job{{ "s" if jobs|length != 1 else "" }}</p></div>
+    </div>
+    {% if jobs %}
+        <div class="match-list">
+            {% for job in jobs %}
+                <article class="panel match-card">
+                    <div class="match-card-heading">
+                        <div>
+                            <p class="eyebrow">{{ job.company_name }}</p>
+                            <h3><a href="{{ url_for('jobs_detail', job_id=job.job_id) }}">{{ job.job_title }}</a></h3>
+                            <p class="match-meta">{{ job.job_type or "Job type not specified" }}{% if job.date_posted %} · Posted {{ job.date_posted }}{% endif %}</p>
+                        </div>
+                        {% if job.match_percent is not none %}
+                            <div class="match-score"><strong>{{ "%.1f"|format(job.match_percent) }}%</strong><span>match</span></div>
+                        {% else %}
+                            <div class="match-score match-score-empty"><strong>—</strong><span>no skills listed</span></div>
+                        {% endif %}
+                    </div>
+
+                    {% if job.match_percent is not none %}
+                        <div class="match-meter" role="meter" aria-label="{{ job.job_title }} skill match" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ job.match_percent }}">
+                            <span style="width: {{ job.match_percent }}%"></span>
+                        </div>
+                        <p class="match-count">{{ job.matched_skills|length }} of {{ job.required_skill_list|length }} required skills matched</p>
+                    {% else %}
+                        <p class="match-count">Add required skills on the job record to calculate a match.</p>
+                    {% endif %}
+
+                    {% if job.required_skill_list %}
+                        <div class="skill-tags" aria-label="Required skills">
+                            {% for skill in job.required_skill_list %}
+                                <span class="skill-tag {{ 'skill-tag-matched' if skill in job.matched_skills else '' }}">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="match-card-footer">
+                        {% if job.salary_min is not none or job.salary_max is not none %}
+                            <span>
+                                {% if job.salary_min is not none %}${{ "%.2f"|format(job.salary_min) }}{% else %}—{% endif %}
+                                –
+                                {% if job.salary_max is not none %}${{ "%.2f"|format(job.salary_max) }}{% else %}—{% endif %}
+                            </span>
+                        {% endif %}
+                        {% if job.posting_url %}
+                            <a href="{{ job.posting_url if job.posting_url.startswith('http://') or job.posting_url.startswith('https://') else 'https://' ~ job.posting_url }}" target="_blank" rel="noopener noreferrer">Open posting</a>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <section class="panel"><p class="empty-state">No active jobs are available to compare. Add or reactivate a job to get started.</p></section>
+    {% endif %}
+</section>
+{% endblock %}

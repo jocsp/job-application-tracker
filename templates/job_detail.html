@@ -35,6 +35,7 @@
                 {% else %}—{% endif %}
             </dd>
         </div>
+        <div class="detail-notes"><dt>Required skills</dt><dd>{{ job.required_skills or "Not specified" }}</dd></div>
         <div class="detail-notes"><dt>Description</dt><dd>{{ job.job_description or "—" }}</dd></div>
     </dl>
 </section>

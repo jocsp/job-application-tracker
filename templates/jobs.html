@@ -42,6 +42,11 @@
                 <label for="job_description">Description</label>
                 <textarea id="job_description" name="job_description" rows="4">{{ form_values.get('job_description') or '' }}</textarea>
 
+                <label for="required_skills">Required skills</label>
+                <textarea id="required_skills" name="required_skills" rows="3" maxlength="5000"
+                          placeholder="Python, SQL, Flask">{{ form_values.get('required_skills') or '' }}</textarea>
+                <p class="field-help">Separate skills with commas or put one skill on each line. Job Match compares whole skill names.</p>
+
                 <div class="field-row">
                     <div>
                         <label for="salary_min">Minimum salary</label>

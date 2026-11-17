@@ -18,6 +18,7 @@ CREATE TABLE jobs (
     company_id INT NOT NULL,
     job_title VARCHAR(100) NOT NULL,
     job_description TEXT,
+    required_skills TEXT,
     salary_min DECIMAL(10,2),
     salary_max DECIMAL(10,2),
     job_type VARCHAR(20),
